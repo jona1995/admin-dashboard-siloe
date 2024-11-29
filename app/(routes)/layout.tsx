@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/NavBar";
 import { Sidebar } from "@/components/Sidebar";
 
 export default function LayoutDashboard({ children }: { children: React.ReactElement }) {

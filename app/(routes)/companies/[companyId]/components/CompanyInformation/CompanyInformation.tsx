@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CompanyInformationProps } from "./CompanyInformation.types";
+import { CompanyInformationProps } from "./companyInformation.types";
 import { User } from "lucide-react";
 import { CompanyForm } from "../CompanyForm";
 import { NewContact } from "../NewContact";

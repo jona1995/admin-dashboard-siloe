@@ -1,3 +1,3 @@
 export type CustomTooltipProps = {
-	content: string;
+  content: string;
 };

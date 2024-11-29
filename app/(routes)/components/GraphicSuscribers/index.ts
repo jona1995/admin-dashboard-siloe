@@ -1,1 +1,1 @@
-export * from './GraphicSuscribers';
+export * from "./GraphicSuscribers";

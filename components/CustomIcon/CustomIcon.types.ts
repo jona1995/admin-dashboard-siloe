@@ -1,5 +1,5 @@
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon } from "lucide-react";
 
 export type CustomIconProps = {
-	icon: LucideIcon;
+  icon: LucideIcon;
 };

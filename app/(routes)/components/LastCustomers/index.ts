@@ -1,1 +1,1 @@
-export * from './LastCustomers';
+export * from "./LastCustomers";

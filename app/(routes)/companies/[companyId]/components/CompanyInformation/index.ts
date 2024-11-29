@@ -1,1 +1,1 @@
-export * from './CompanyInformation';
+export * from "./CompanyInformation";

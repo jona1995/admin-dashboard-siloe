@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction } from "react";
 
 export type FormContactProps = {
-	setOpen: Dispatch<SetStateAction<boolean>>;
+  setOpen: Dispatch<SetStateAction<boolean>>;
 };

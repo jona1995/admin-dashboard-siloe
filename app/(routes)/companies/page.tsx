@@ -1,11 +1,11 @@
-import { ListCompanies } from '../components/ListCompanies';
-import { HeaderCompanies } from './components/HeaderCompanies';
+import { HeaderCompanies } from "./components/HeaderCompanies"
+import { ListCompanies } from "./components/ListCompanies"
 
-export default function CompaniesPages() {
-	return (
-		<div>
-			<HeaderCompanies />
-			<ListCompanies />
-		</div>
-	);
+export default function CompaniesPage() {
+    return (
+        <div>
+            <HeaderCompanies />
+            <ListCompanies />
+        </div>
+    )
 }

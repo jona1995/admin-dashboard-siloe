@@ -6,7 +6,7 @@ import { LastCustomers } from '@/app/(routes)/components/LastCustomers';
 import { Salesdistributors } from './components/Salesdistributors';
 import { TotalSuscribers } from './components/TotalSuscribers';
 import { ListIntegrations } from './components/ListIntegrations';
-export const dataCardsSummary = [
+const dataCardsSummary = [
 	{
 		icon: UserRound,
 		total: '12.450',

@@ -1,8 +1,6 @@
 'use client';
 import { ArrowUpDown, MoreHorizontal, Pencil } from 'lucide-react';
 
-import { Company, Evaluation, Grade } from '@prisma/client';
-
 import { ColumnDef } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';

@@ -10,59 +10,233 @@ generator client {
 
 datasource db {
   provider     = "postgresql"
-  url          = env("DATABASE_URL")
+  // url          = env("DATABASE_URL")
+  url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db-local?sslmode=require"
+  // url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db?sslmode=require"
   relationMode = "prisma"
 }
 
-model Company {
-  id           String  @id @default(uuid())
-  userId       String
-  name         String  @db.Text
-  description  String? @db.Text
-  profileImage String  @db.Text
-  cif          String  @db.Text
-  phone        String  @db.Text
-  country      String  @db.Text
-  website      String  @db.Text
+model Student {
+  id               Int          @id @default(autoincrement())
+  nombre           String
+  apellido         String
+  cedula           String
+  email            String
+  telefono         String
+  iglesia          String
+  localidadIglesia String
+  planFijoId       Int?
+  enrollments      Enrollment[]
+  paymentsMade     Payment[]    @relation("PaymentsMade")
+  paymentsReceived Payment[]    @relation("PaymentsReceived")
+  evaluations      Evaluation[]
+  absences         Absence[]
+  Grade            Grade[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  Plan             Plan[]
 
-  contacts Contact[]
+  @@index([planFijoId]) // Índice en clave foránea
+}
 
-  events Event[]
+model Course {
+  id                Int          @id @default(autoincrement())
+  nombre            String
+  descripcion       String
+  duracion          Int
+  revenuePercentage Float        @default(0.0) // Porcentaje de recaudación del curso
+  subjects          Subject[]    @relation("CourseSubjects") // Relación con materias
+  Grade             Grade[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  enrollments       Enrollment[] @relation("EnrollmentCourses")
 
+  @@index([id]) // Índice en ID del curso para optimización de consultas
+}
+
+model Subject {
+  id          Int              @id @default(autoincrement())
+  nombre      String
+  descripcion String
+  cursoId     Int?
+  evaluations Evaluation[]
+  grades      Grade[]
+  absences    Absence[] // Relación con ausencias asociadas a esta materia
+  course      Course[]         @relation("CourseSubjects") // Relación inversa con cursos
+  teachers    SubjectTeacher[] // Relación con múltiples profesores
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  Absence Absence[] @relation("SubjectAbsence")
+}
+
+model Teacher {
+  id        Int              @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  email     String
+  telefono  String
+  subjects  SubjectTeacher[] // Relación con las materias que imparte el maestro
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model SubjectTeacher {
+  id        Int @id @default(autoincrement())
+  subjectId Int
+  teacherId Int
+
+  subject Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+}
+
+model Enrollment {
+  id               Int              @id @default(autoincrement())
+  estudianteId     Int
+  fechaInscripcion DateTime
+  estado           EstadoIncripcion //  Puede ser ACTIVO o INACTIVO
+  planId           Int
+  modalidad        ModalidadEstudio // Modalidad de estudio del estudiante en el curso
+  plan             Plan             @relation(fields: [planId], references: [id]) // Relación con Plan
+
+  student   Student   @relation(fields: [estudianteId], references: [id])
+  courses   Course[]  @relation("EnrollmentCourses") // Relación con múltiples cursos
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Payment {
+  id            Int        @id @default(autoincrement())
+  monto         Float
+  fechaPago     DateTime
+  estadoPago    EstadoPago //EstadoPago
+  tipoPago      TipoPago // Nuevo campo para identificar si es matrícula o graduación
+  pagadorId     Int
+  planId        Int
+  comentario    String
+  pagador       Student    @relation("PaymentsMade", fields: [pagadorId], references: [id])
+  beneficiarios Student[]  @relation("PaymentsReceived")
+  plan          Plan       @relation(fields: [id], references: [id]) // Relación con Plan
+
+  Enrollment Enrollment[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  FinancialTransaction FinancialTransaction[]
+}
+
+model Plan {
+  id                    Int          @id @default(autoincrement())
+  nombre                String // Nombre del plan (por ejemplo, "Plan Básico", "Plan Avanzado")
+  descripcion           String
+  precioBase            Float // Precio base del plan
+  cantidadDiplomaturas  Int // Número de diplomaturas que incluye
+  cantidadBachilleratos Int // Número de bachilleratos que incluye
+  precioDiplomatura     Float // Porcentaje de descuento para diplomaturas
+  precioBachillerato    Float // Porcentaje de descuento para bachilleratos
+  estudiantes           Student[]
+  enrollments           Enrollment[]
+  payments              Payment[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model Evaluation {
+  id           Int            @id @default(autoincrement())
+  nombre       String
+  descripcion  String
+  tipo         TipoEvaluacion // Enum para tipo de evaluación
+  fecha        DateTime
+  subjectId    Int
+  estudianteId Int
+  nota         Float
+  comentario   String
+
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  student   Student  @relation(fields: [estudianteId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Contact {
-  id String @id @default(uuid())
+model Absence {
+  id           Int      @id @default(autoincrement())
+  fecha        DateTime
+  motivo       String?
+  estudianteId Int
+  subjectId    Int
 
-  companyId String? @db.Text
-
-  name  String @db.Text
-  role  String @db.Text
-  email String @db.Text
-  phone String @db.Text
-
+  student   Student  @relation(fields: [estudianteId], references: [id])
+  subject   Subject  @relation("SubjectAbsence", fields: [subjectId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@index([companyId])
+  Subject Subject[]
 }
 
-model Event {
-  id         String   @id @default(uuid())
-  companyId  String
-  title      String
-  start      DateTime
-  allDay     Boolean
-  timeFormat String
+model Grade {
+  id           Int   @id @default(autoincrement())
+  subjectId    Int
+  estudianteId Int
+  cursoId      Int
+  promedio     Float
 
-  company Company @relation(fields: [companyId], references: [id])
-
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  student   Student  @relation(fields: [estudianteId], references: [id])
+  course    Course   @relation(fields: [cursoId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([companyId])
+  @@index([subjectId, estudianteId, cursoId]) // Índice compuesto para mejorar consultas
+}
+
+model FinancialTransaction {
+  id          Int             @id @default(autoincrement())
+  fecha       DateTime
+  monto       Float
+  tipo        TransactionType
+  descripcion String?
+  Payment     Payment?        @relation(fields: [paymentId], references: [id])
+  paymentId   Int?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum TransactionType {
+  INGRESO
+  EGRESO
+}
+
+enum ModalidadEstudio {
+  EN_CLASE
+  GRABADO
+}
+
+enum EstadoPago {
+  PENDIENTE
+  COMPLETADO
+  FALLADO
+  INCOMPLETO
+}
+
+enum TipoPago {
+  MATRICULA
+  GRADUACION
+  CUOTA
+  OTRO
+}
+
+enum EstadoIncripcion {
+  ACTIVO
+  INACTIVO
+  COMPLETADO
+}
+
+enum TipoEvaluacion {
+  PARTICIPACION_CLASE
+  LECTURA
+  TAREA
+  EXAMEN
+  PROYECTO_FINAL
+  OTRO
 }

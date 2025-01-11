@@ -1,0 +1,13 @@
+export enum EstadoPago {
+	PENDIENTE = 'PENDIENTE',
+	COMPLETADO = 'COMPLETADO',
+	FALLADO = 'FALLADO',
+	INCOMPLETO = 'INCOMPLETO',
+}
+
+export enum TipoPago {
+	CUOTA = 'CUOTA',
+	MATRICULA = 'MATRICULA',
+	GRADUACION = 'GRADUACION',
+	OTRO = 'OTRO',
+}

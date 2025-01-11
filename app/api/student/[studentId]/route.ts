@@ -26,7 +26,7 @@ export async function PATCH(
 
 		return NextResponse.json(student);
 	} catch (error) {
-		console.log('[COMPANY ID]', error);
+		console.log('[STUDENT ID]', error);
 		return new NextResponse('Internal Error', { status: 500 });
 	}
 }

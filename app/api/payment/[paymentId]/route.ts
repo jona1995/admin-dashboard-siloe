@@ -29,7 +29,7 @@ export async function PATCH(
 
 		return NextResponse.json(payment);
 	} catch (error) {
-		console.log('[COMPANY ID]', error);
+		console.log('[PAYMENT ID]', error);
 		return new NextResponse('Internal Error', { status: 500 });
 	}
 }

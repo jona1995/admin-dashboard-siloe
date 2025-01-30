@@ -19,7 +19,6 @@ export async function Payments() {
 			createdAt: 'desc',
 		},
 		include: {
-			plan: true, // Incluye la información de la materia
 			pagador: true,
 			beneficiarios: true,
 			// Enrollment: true,

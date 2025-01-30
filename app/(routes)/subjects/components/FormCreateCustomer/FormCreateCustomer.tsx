@@ -31,7 +31,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-	nombre: z.string(),
+	nombre: z.string().min(1, { message: 'El nombre es obligatorio.' }),
 	descripcion: z.string(),
 });
 

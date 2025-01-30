@@ -4,12 +4,14 @@ import {
 	ModalidadEstudio,
 	Plan,
 	Student,
+	User,
 } from '@prisma/client';
 
 export type Enrollment = {
 	id: number;
 	estudianteId: number;
-	fechaInscripcion: Date;
+	fechaInscripcionDesde: Date;
+	fechaInscripcionHasta: Date;
 	estado: EstadoIncripcion;
 	planId: number;
 	modalidad: ModalidadEstudio;
@@ -18,4 +20,5 @@ export type Enrollment = {
 	student: Student; // Este es el objeto relacionado del estudiante
 	plan: Plan; // Este es el objeto relacionado de la materia
 	courses: Course[];
+	user: User;
 };

@@ -10,10 +10,13 @@ export async function POST(req: Request) {
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
-
+		const userName = req.headers.get('x-user-name');
+		const userEmail = req.headers.get('x-user-email');
 		const planes = await db.plan.create({
 			data: {
 				...data,
+				createdBy: userId,
+				createdByName: userName ? userName : '',
 			},
 		});
 

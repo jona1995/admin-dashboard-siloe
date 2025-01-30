@@ -11,8 +11,14 @@ export function Logo() {
 			className="flex items-center h-20 gap-2 px-6 border-b cursor-pointer min-h-20"
 			onClick={() => router.push('/')}
 		>
-			<Image src="/logo.svg" alt="Logo" width={30} height={30} priority />
-			<h1 className="text-xl font-bold">Admin - Siloe</h1>
+			<Image
+				src="/logo_siloe.png"
+				alt="Logo"
+				width={180}
+				height={40}
+				priority
+			/>
+			<h1 className="text-xl font-bold"></h1>
 		</div>
 	);
 }

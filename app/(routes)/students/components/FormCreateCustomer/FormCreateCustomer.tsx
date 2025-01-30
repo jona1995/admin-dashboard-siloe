@@ -31,19 +31,20 @@ import { toast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-	nombre: z.string(),
-	apellido: z.string(),
-	cedula: z.string(),
-	email: z.string(),
-	telefono: z.string(),
-	iglesia: z.string(),
-	localidadIglesia: z.string(),
+	nombre: z.string().min(1, { message: 'El nombre es obligatorio.' }),
+	apellido: z.string().min(1, { message: 'El apellido es obligatorio.' }),
+	cedula: z.string().min(1, { message: 'La cédula es obligatoria.' }),
+	email: z.string().email({ message: 'Debe ser un email válido.' }).optional(),
+	telefono: z.string().min(1, { message: 'El teléfono es obligatorio.' }),
+	iglesia: z.string().min(1, { message: 'La iglesia es obligatoria.' }),
+	localidadIglesia: z
+		.string()
+		.min(1, { message: 'La localidad iglesia es obligatoria.' }),
 });
 
 export function FormCreateCustomer(props: FormCreateCustomerProps) {
 	const { setOpenModalCreate } = props;
 	const router = useRouter();
-	const [photoUploaded, setPhotoUploaded] = useState(false);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -62,7 +63,7 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			await axios.post('/api/student', values);
+			await axios.post('/api/user', values);
 			toast({ title: 'Estudiante Creado' });
 			setOpenModalCreate(false);
 			router.refresh();

@@ -28,17 +28,24 @@ import {
 
 import { toast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
-import { Student, Subject } from '@prisma/client';
+import { Student, Subject, Teacher } from '@prisma/client';
 import { Tipo } from '../../utils/enum';
 
 const formSchema = z.object({
-	nombre: z.string(),
+	nombre: z.string().min(1, { message: 'El nombre es obligatorio.' }),
 	descripcion: z.string(),
-	tipo: z.string(),
-	fecha: z.date(),
-	subjectId: z.string(),
-	estudianteId: z.string(),
-	nota: z.number(),
+	tipo: z.string().min(1, { message: 'El tipo es obligatorio.' }),
+	fecha: z.date({
+		required_error: 'La fecha  es obligatoria.',
+	}),
+	teacherId: z.string().min(1, { message: 'La profesor es obligatorio.' }),
+	subjectId: z.string().min(1, { message: 'La materia es obligatorio.' }),
+	estudianteId: z.string().min(1, { message: 'El estudiante es obligatorio.' }),
+	nota: z
+		.number()
+		.min(1, { message: 'La nota debe ser como mínimo 1.' }) // Valor mínimo
+		.max(10, { message: 'La nota debe ser como máximo 10.' }) // Valor máximo
+		.refine(val => val !== null, { message: 'La nota es obligatoria.' }), // Asegura que no sea null
 	comentario: z.string(),
 });
 
@@ -53,6 +60,7 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 			descripcion: '',
 			tipo: '',
 			fecha: undefined,
+			teacherId: '',
 			subjectId: '',
 			estudianteId: '',
 			nota: undefined,
@@ -76,7 +84,26 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 	}, []);
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
+	}));
+	const [teachers, setTeachers] = useState<Teacher[]>([]); // Estado para
+	useEffect(() => {
+		const fetchTeachers = async () => {
+			try {
+				const response = await axios.get<Teacher[]>('/api/teacher');
+
+				console.log(response.data); // Log the response data
+				setTeachers(response.data);
+			} catch (error) {
+				console.error('Error fetching teachears:', error);
+			}
+		};
+
+		fetchTeachers();
+	}, []);
+	const teachersMap = teachers.map(teacher => ({
+		value: teacher.id,
+		label: teacher.nombre + ' - ' + teacher.cedula, // Capitalizamos el tipo
 	}));
 	const tipos = Object.values(Tipo).map(tipo => ({
 		value: tipo,
@@ -109,6 +136,7 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 				...values,
 				subjectId: parseInt(values.subjectId, 10), // Convertimos subjects a números
 				estudianteId: parseInt(values.estudianteId, 10), // Convertimos estudiantes a números
+				teacherId: parseInt(values.teacherId, 10),
 			};
 			await axios.post('/api/evaluation', formattedValues);
 			toast({ title: 'Evaluacion Creada' });
@@ -239,6 +267,34 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 						/>
 						<FormField
 							control={form.control}
+							name="teacherId"
+							render={({ field }) => {
+								return (
+									<FormItem>
+										<FormLabel>Profesor</FormLabel>
+										<FormControl>
+											{/* El componente Select de react-select para TipoPago */}
+											<Select
+												options={teachersMap} // Usamos el array de tipos de pago
+												onChange={selectedOption => {
+													console.log(field);
+													field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
+												}}
+												value={teachersMap.find(
+													option =>
+														option.value.toString() === field.value.toString()
+												)} // Filtramos la opción seleccionada
+												placeholder="Seleccione profesor"
+												noOptionsMessage={() => 'No hay profesores disponibles'}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+						<FormField
+							control={form.control}
 							name="subjectId"
 							render={({ field }) => {
 								return (
@@ -277,11 +333,21 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 											placeholder="Nota..."
 											type="number"
 											{...field}
-											onChange={e =>
-												field.onChange(
-													e.target.value ? Number(e.target.value) : undefined
-												)
-											}
+											min={1} // Límite inferior
+											max={10} // Límite superior
+											step={1} // Incrementos de 1
+											{...field}
+											onChange={e => {
+												const value = Number(e.target.value);
+												// Validar que el valor esté dentro del rango permitido
+												if (value >= 1 && value <= 10) {
+													field.onChange(value);
+												} else if (value < 1) {
+													field.onChange(1); // Ajustar al mínimo
+												} else if (value > 10) {
+													field.onChange(10); // Ajustar al máximo
+												}
+											}}
 										/>
 									</FormControl>
 								</FormItem>

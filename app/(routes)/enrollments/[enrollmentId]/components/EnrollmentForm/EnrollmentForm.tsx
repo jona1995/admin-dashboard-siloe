@@ -36,16 +36,20 @@ import moment from 'moment';
 export function EnrollmentForm(props: EnrollmentFormProps) {
 	const { enrollment } = props;
 	const router = useRouter();
-
+	console.log(enrollment);
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			estudianteId: enrollment.estudianteId.toString(),
 			courses: enrollment.courses.map(course => course.id.toString()),
-			fechaInscripcion: enrollment.fechaInscripcion,
+			fechaInscripcionDesde: enrollment.fechaInscripcionDesde,
+			fechaInscripcionHasta: enrollment.fechaInscripcionHasta,
 			estado: enrollment.estado,
-			planId: enrollment.planId.toString(),
+			planId: enrollment.planId ? enrollment.planId.toString() : undefined,
 			modalidad: enrollment.modalidad,
+			estudiantesAsociados: enrollment.estudiantesAsociados.map(
+				estudianteAsociado => beneficiario.id.toString()
+			),
 		},
 	});
 	const [students, setStudents] = useState<Student[]>([]); // Estado para
@@ -63,9 +67,14 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 
 		fetchStudents();
 	}, []);
+	const studentOptions = students.map(student => ({
+		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
+		label: student.nombre + ' - ' + student.cedula, // El nombre será lo que se mostrará en la opción
+	}));
+
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
 	const [courses, setCourses] = useState<Course[]>([]); // Estado para
 	useEffect(() => {
@@ -142,10 +151,39 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 				<div className="grid grid-cols-2 gap-3">
 					<FormField
 						control={form.control}
-						name="fechaInscripcion"
+						name="fechaInscripcionDesde"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Fecha Incripcion</FormLabel>
+								<FormLabel>Fecha Incripcion Desde</FormLabel>
+								<FormControl>
+									<input
+										type="date"
+										className="w-full px-3 py-2 border rounded-md"
+										value={
+											field.value
+												? moment(field.value).local().format('YYYY-MM-DD') // Formatear con moment
+												: ''
+										}
+										onChange={e => {
+											const selectedDate = e.target.value
+												? moment(e.target.value, 'YYYY-MM-DD').toDate()
+												: undefined;
+
+											console.log('Fecha seleccionada:', selectedDate); // Mostrar la fecha en consola
+											field.onChange(selectedDate);
+										}}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="fechaInscripcionHasta"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Fecha Incripcion hasta</FormLabel>
 								<FormControl>
 									<input
 										type="date"
@@ -251,6 +289,37 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 					/>
 					<FormField
 						control={form.control}
+						name="estudiantesAsociados"
+						render={({ field }) => {
+							return (
+								<FormItem>
+									<FormLabel>Estudiante Asociados al Plan</FormLabel>
+									<FormControl>
+										{/* El componente Select de react-select */}
+										<Select
+											isMulti // Habilita la selección múltiple
+											options={studentOptions} // Lista de opciones de estudiantes
+											onChange={selectedOptions => {
+												// `selectedOptions` es un array con las opciones seleccionadas
+												const selectedIds = selectedOptions.map(
+													option => option.value
+												);
+												field.onChange(selectedIds); // Guarda los IDs seleccionados
+											}}
+											value={studentOptions.filter(option =>
+												field.value?.includes(option.value)
+											)} // Filtra las opciones seleccionadas
+											placeholder="Seleccione estudiantes"
+											noOptionsMessage={() => 'No hay estudiantes disponibles'} // Mensaje cuando no hay opciones
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							);
+						}}
+					/>
+					<FormField
+						control={form.control}
 						name="planId"
 						render={({ field }) => {
 							return (
@@ -265,7 +334,8 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 											}}
 											value={planesMap.find(
 												option =>
-													option.value.toString() === field.value.toString()
+													option.value.toString() ===
+													(field.value ? field.value.toString() : undefined)
 											)} // Filtramos la opción seleccionada
 											placeholder="Seleccione un plan"
 											noOptionsMessage={() => 'No hay planes disponibles'}

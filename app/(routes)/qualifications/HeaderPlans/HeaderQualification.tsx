@@ -22,7 +22,7 @@ export function HeaderQualification() {
 				<DialogTrigger asChild>
 					<Button>Crear Plan</Button>
 				</DialogTrigger>
-				<DialogContent className="sm:max-w-[625px]">
+				<DialogContentclassName="sm:max-w-[725px] sm:max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>Crear Plan</DialogTitle>
 						<DialogDescription>

@@ -18,7 +18,13 @@ export async function Teachers() {
 		orderBy: {
 			createdAt: 'desc',
 		},
+		include: {
+			subjects: true,
+		},
 	});
-
-	return <DataTable columns={columns} data={teachers} />;
+	const dataWithSubjects = teachers.map(teacher => ({
+		...teacher,
+		subjectsNames: teacher.subjects.map(subject => subject.nombre).join(', '), // Cambia "name" según el campo que quieras mostrar
+	}));
+	return <DataTable columns={columns} data={dataWithSubjects} />;
 }

@@ -4,13 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import Select from 'react-select'; // Importa react-select
 import { Button } from '@/components/ui/button';
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -19,26 +18,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { FormCreateCustomerProps } from './FormCreateCustomer.types';
 
-import {
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { EstadoPago, TipoPago } from '../../utils/enum';
-import { Plan, Student } from '@prisma/client';
+import { Course, Enrollment, Plan, Student, User } from '@prisma/client';
 import React from 'react';
 
 const formSchema = z.object({
-	fechaPago: z.date(),
-	monto: z.string(),
-	estadoPago: z.string(),
+	fechaPagoMes: z.date({
+		required_error: 'La fecha  es obligatoria.',
+	}),
+	fechaPagoRecibo: z.date().optional(), // Ahora no es obligatorio,
+	monto: z.number(),
 	tipoPago: z.string(),
 	beneficiarios: z.array(z.string()),
 	pagadorId: z.string(),
-	planId: z.string(),
+	enrollmentId: z.string(),
 	comentario: z.string(),
 });
 
@@ -49,42 +44,140 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			fechaPago: undefined,
-			monto: '',
-			estadoPago: '',
+			fechaPagoMes: undefined,
+			fechaPagoRecibo: undefined,
+			monto: 0,
 			tipoPago: '',
 			beneficiarios: [],
+			enrollmentId: '',
 			pagadorId: '',
-			planId: '',
 			comentario: '',
 		},
 	});
-	const [students, setStudents] = useState<Student[]>([]);
-	const [searchQuery, setSearchQuery] = React.useState('');
-	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
-	const studentOptions = students.map(student => ({
-		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
-		label: student.nombre, // El nombre será lo que se mostrará en la opción
-	}));
-	console.log(EstadoPago);
-	const estados = Object.values(EstadoPago).map(estado => ({
-		value: estado,
-		label: estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase(), // Capitalizamos el estado
-	}));
 	// Convertimos los valores del enum TipoPago a un arreglo
 	const tipos = Object.values(TipoPago).map(tipo => ({
 		value: tipo,
 		label: tipo.charAt(0).toUpperCase() + tipo.slice(1).toLowerCase(), // Capitalizamos el tipo
 	}));
+	const [students, setStudents] = useState<User[]>([]);
+	const [studentsAsociados, setStudentsAsociados] = useState<User[]>([]);
+	const [inscriptions, setInscriptions] = useState<Enrollment[]>([]);
+	const [plan, setPlan] = useState<Plan | null>(null);
+	const [courses, setCourses] = useState<Course[]>([]);
+	const [selectedPagador, setSelectedPagador] = useState<string | null>(null);
+	const [selectedEnrollment, setSelectedEnrollment] = useState<string[]>([]);
+	// Maneja la selección de una inscripción
+	const handleEnrollmentChange = async (selectedOption: any) => {
+		const enrollmentId = selectedOption?.value; // ID de la inscripción seleccionada
+		form.setValue('enrollmentId', enrollmentId); // Actualiza el valor en el formulario
 
+		if (enrollmentId) {
+			try {
+				// Llama a la API para obtener los estudiantes asociados a la inscripción
+				const response = await axios.get(
+					`/api/enrollment/${enrollmentId}/students`
+				);
+				const studentsAssociated = response.data; // Lista de estudiantes
+				console.log(studentsAssociated);
+				// Actualiza el estado local de estudiantes y beneficiarios en el formulario
+				setStudentsAsociados(studentsAssociated);
+				form.setValue(
+					'beneficiarios',
+					studentsAssociated.map((student: User) => student.id.toString()) // IDs de estudiantes como strings
+				);
+			} catch (error) {
+				console.error('Error al cargar estudiantes asociados:', error);
+				toast({
+					title: 'Error al cargar estudiantes',
+					variant: 'destructive',
+				});
+			}
+		} else {
+			// Si no hay inscripción seleccionada, limpia los estudiantes
+			setStudentsAsociados([]);
+			form.setValue('beneficiarios', []); // Limpia los beneficiarios
+		}
+	};
+
+	// Maneja la selección del pagador
+	const handlePagadorChange = async (selectedOption: any) => {
+		const pagadorId = selectedOption?.value;
+		setSelectedPagador(pagadorId);
+
+		if (pagadorId) {
+			try {
+				form.setValue('pagadorId', pagadorId);
+				// Obtener las inscripciones activas para el pagador seleccionado
+				const response = await axios.get(
+					`/api/enrollment?studentId=${pagadorId}`
+				);
+				const inscriptions = response.data; // Inscripciones activas del pagador
+
+				const enrollmentOptions = inscriptions.map(
+					(enrollment: Enrollment) => ({
+						value: enrollment.id,
+						label: enrollment.fechaInscripcionDesde,
+					})
+				);
+				setInscriptions(response.data); // Lista de inscripciones
+				form.setValue('enrollmentId', '');
+
+				// Obtener estudiantes asociados a las inscripciones activas
+				const studentIds = response.data.flatMap(
+					(enrollment: Enrollment) => enrollment.estudianteId
+				);
+				const studentsResponse = await axios.get('/api/students', {
+					params: { studentIds },
+				});
+				setStudents(studentsResponse.data);
+
+				// // Obtener el plan y cursos asociados a las inscripciones
+				// const planResponse = await axios.get(
+				// 	`/api/plans?pagadorId=${pagadorId}`
+				// );
+				// setPlan(planResponse.data);
+				// const coursesResponse = await axios.get(
+				// 	`/api/courses?planId=${planResponse.data.id}`
+				// );
+				// setCourses(coursesResponse.data);
+			} catch (error) {
+				console.error('Error fetching data', error);
+			}
+		} else {
+			// Si no hay pagador seleccionado, limpia las inscripciones
+			setInscriptions([]);
+			form.setValue('enrollmentId', '');
+		}
+	};
+
+	// Actualiza las inscripciones y beneficiarios
+	// useEffect(() => {
+	// 	if (selectedPagador) {
+	// 		form.setValue(
+	// 			'beneficiarios',
+	// 			students
+	// 				.filter(student => student.enrollment.includes(selectedPagador)) // Filtrar los estudiantes que tienen la inscripción activa
+	// 				.map(student => student.id.toString()) // Mapear a un array de IDs en formato string
+	// 		);
+	// 	}
+	// }, [selectedPagador, students]);
+	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
+	const studentOptions = students.map(student => ({
+		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
+		label: student.nombre + ' - ' + student.cedula, // El nombre será lo que se mostrará en la opción
+	}));
+	const incriptionsMap = inscriptions.map(enrollment => ({
+		value: enrollment.id.toString(),
+		label: enrollment.id.toString(),
+	}));
 	const studentsMap = students.map(student => ({
-		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		value: student.id.toString(),
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
 	useEffect(() => {
 		const fetchSubjects = async () => {
 			try {
-				const response = await axios.get<Student[]>('/api/student');
+				const response = await axios.get<User[]>('/api/student');
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
 			} catch (error) {
@@ -94,48 +187,61 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 
 		fetchSubjects();
 	}, []);
-	const [planes, setPlanes] = useState<Plan[]>([]); // Estado para
-	useEffect(() => {
-		const fetchPlanes = async () => {
-			try {
-				const response = await axios.get<Plan[]>('/api/plan');
 
-				console.log(response.data); // Log the response data
-				setPlanes(response.data);
-			} catch (error) {
-				console.error('Error fetching planes:', error);
-			}
-		};
-
-		fetchPlanes();
-	}, []);
-	const planesMap = planes.map(plan => ({
-		value: plan.id,
-		label: plan.nombre, // Capitalizamos el tipo
-	}));
 	const { isValid } = form.formState;
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
+			console.log('formattedValues');
 			const formattedValues = {
 				...values,
-				monto: parseFloat(values.monto),
+				enrollmentId: parseInt(values.enrollmentId, 10),
+				monto: values.monto,
 				pagadorId: parseInt(values.pagadorId, 10),
-				planId: parseInt(values.planId, 10),
 				beneficiarios: values.beneficiarios.map(
 					(beneficiario: string | number) => Number(beneficiario)
 				),
 			};
+			console.log(values);
 			console.log(formattedValues);
-			await axios.post('/api/payment', formattedValues);
-			toast({ title: 'Pago Creado' });
-			setOpenModalCreate(false);
-			router.refresh();
+			const response = await axios.post('/api/payment', formattedValues);
+
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Pago realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				setOpenModalCreate(false); // Cerrar el modal después de la operación exitosa
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el pago');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Verifica si el error tiene una respuesta y muestra el mensaje
+			// const errorMessage = error.response?.data?.message || 'Algo salió mal';
+			// toast({
+			// 	title: 'Something went wrong1',
+			// 	variant: 'destructive',
+			// });
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 
@@ -146,10 +252,36 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 					<div className="grid grid-cols-2 gap-3">
 						<FormField
 							control={form.control}
-							name="fechaPago"
+							name="fechaPagoMes"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Fecha Pago</FormLabel>
+									<FormLabel>Fecha Pago Mes</FormLabel>
+									<FormControl>
+										<input
+											type="date"
+											className="w-full px-3 py-2 border rounded-md"
+											value={
+												field.value
+													? new Date(field.value).toISOString().split('T')[0]
+													: ''
+											}
+											onChange={e =>
+												field.onChange(
+													e.target.value ? new Date(e.target.value) : undefined
+												)
+											}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="fechaPagoRecibo"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Fecha Pago Recibo</FormLabel>
 									<FormControl>
 										<input
 											type="date"
@@ -181,40 +313,18 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 											placeholder="Monto Pago..."
 											type="number"
 											{...field}
+											onChange={e => {
+												const newValue = e.target.value
+													? Number(e.target.value)
+													: 0;
+												// Verificar si el valor es negativo y no permitirlo
+												field.onChange(newValue >= 0 ? newValue : 0);
+											}}
 										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
-						/>
-						<FormField
-							control={form.control}
-							name="estadoPago"
-							render={({ field }) => {
-								console.log('Current value:', field.value);
-								return (
-									<FormItem>
-										<FormLabel>Estado Pago</FormLabel>
-										<FormControl>
-											{/* El componente Select de react-select */}
-											<Select
-												options={estados} // Usamos el array de estados convertidos
-												onChange={selectedOption => {
-													console.log('Selected option:', selectedOption);
-													field.onChange(selectedOption?.value.toString()); // Seleccionamos el valor del estado
-												}}
-												value={estados.find(
-													option =>
-														option.value.toString() === field.value.toString()
-												)} // Filtramos la opción seleccionada
-												placeholder="Seleccione un estado"
-												noOptionsMessage={() => 'No hay estados disponibles'}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								);
-							}}
 						/>
 						<FormField
 							control={form.control}
@@ -244,7 +354,6 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 								);
 							}}
 						/>
-
 						<FormField
 							control={form.control}
 							name="pagadorId"
@@ -256,9 +365,7 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 											{/* El componente Select de react-select para TipoPago */}
 											<Select
 												options={studentsMap} // Usamos el array de tipos de pago
-												onChange={selectedOption => {
-													field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
-												}}
+												onChange={handlePagadorChange}
 												value={studentsMap.find(
 													option =>
 														option.value.toString() === field.value.toString()
@@ -276,30 +383,65 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 						/>
 						<FormField
 							control={form.control}
+							name="enrollmentId"
+							render={({ field }) => {
+								return (
+									<FormItem>
+										<FormLabel>Inscripciones</FormLabel>
+										<FormControl>
+											<Select
+												options={incriptionsMap} // Opciones de inscripciones
+												onChange={selectedOption => {
+													handleEnrollmentChange(selectedOption); // Llama al método
+												}}
+												value={incriptionsMap.find(
+													option =>
+														option.value.toString() === field.value.toString()
+												)} // Filtra la opción seleccionada
+												placeholder="Seleccione una inscripción"
+												noOptionsMessage={() =>
+													'No hay inscripciones disponibles'
+												}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+
+						<FormField
+							control={form.control}
 							name="beneficiarios"
 							render={({ field }) => {
 								return (
 									<FormItem>
-										<FormLabel>beneficiarios</FormLabel>
+										<FormLabel>Beneficiarios</FormLabel>
 										<FormControl>
-											{/* El componente Select de react-select */}
 											<Select
-												isMulti // Habilita la selección múltiple
-												options={studentOptions} // Lista de opciones de estudiantes
+												isMulti
+												options={studentsAsociados.map(student => ({
+													value: student.id.toString(),
+													label: `${student.nombre} - ${student.cedula}`,
+												}))}
 												onChange={selectedOptions => {
-													// `selectedOptions` es un array con las opciones seleccionadas
 													const selectedIds = selectedOptions.map(
 														option => option.value
 													);
 													field.onChange(selectedIds); // Guarda los IDs seleccionados
 												}}
-												value={studentOptions.filter(option =>
-													field.value?.includes(option.value)
-												)} // Filtra las opciones seleccionadas
+												value={studentsAsociados
+													.map(student => ({
+														value: student.id.toString(),
+														label: `${student.nombre} - ${student.cedula}`,
+													}))
+													.filter(option =>
+														field.value?.includes(option.value)
+													)}
 												placeholder="Seleccione estudiantes"
 												noOptionsMessage={() =>
 													'No hay estudiantes disponibles'
-												} // Mensaje cuando no hay opciones
+												}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -307,33 +449,7 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 								);
 							}}
 						/>
-						<FormField
-							control={form.control}
-							name="planId"
-							render={({ field }) => {
-								return (
-									<FormItem>
-										<FormLabel>Plan</FormLabel>
-										<FormControl>
-											{/* El componente Select de react-select para TipoPago */}
-											<Select
-												options={planesMap} // Usamos el array de tipos de pago
-												onChange={selectedOption => {
-													field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
-												}}
-												value={planesMap.find(
-													option =>
-														option.value.toString() === field.value.toString()
-												)} // Filtramos la opción seleccionada
-												placeholder="Seleccione un plan"
-												noOptionsMessage={() => 'No hay planes disponibles'}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								);
-							}}
-						/>
+
 						<FormField
 							control={form.control}
 							name="comentario"
@@ -341,18 +457,21 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 								<FormItem>
 									<FormLabel>Comentario</FormLabel>
 									<FormControl>
-										<Input placeholder="Comentario..." type="text" {...field} />
+										<textarea
+											placeholder="Comentario..."
+											{...field}
+											className="resize-none p-2 border rounded-md w-full h-32" // Puedes personalizar estos estilos
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 					</div>
-					<Button type="submit" disabled={!isValid}>
-						Enviar
-					</Button>
+					<Button type="submit">Enviar</Button>
 				</form>
 			</Form>
 		</div>
 	);
 }
+// disabled={!isValid}

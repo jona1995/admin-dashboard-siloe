@@ -11,195 +11,281 @@ generator client {
 datasource db {
   provider     = "postgresql"
   // url          = env("DATABASE_URL")
-  url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db-local?sslmode=require"
-  // url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db?sslmode=require"
+  // url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db-local?sslmode=require"
+  url          = "postgresql://dashboard-siloe-db_owner:iN5CEvhmKwY7@ep-white-wave-a5efkcdu.us-east-2.aws.neon.tech/dashboard-siloe-db?sslmode=require"
   relationMode = "prisma"
 }
 
-model Student {
-  id               Int          @id @default(autoincrement())
+model User {
+  id               Int       @id @default(autoincrement())
+  clerkId          String?   @unique // ID de Clerk para vinculación
   nombre           String
   apellido         String
-  cedula           String
-  email            String
+  cedula           String    @unique
+  email            String    @unique
   telefono         String
   iglesia          String
   localidadIglesia String
-  planFijoId       Int?
-  enrollments      Enrollment[]
-  paymentsMade     Payment[]    @relation("PaymentsMade")
-  paymentsReceived Payment[]    @relation("PaymentsReceived")
-  evaluations      Evaluation[]
-  absences         Absence[]
-  Grade            Grade[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  Plan             Plan[]
+  state            UserState //  Puede ser ACTIVO o INACTIVO
+  tipo             UserType // Enum para tipo de usuario
+  student          Student? // Relación opcional si es estudiante
+  teacher          Teacher? // Relación opcional si es profesor
+  roles            RolUser[] // Relación con roles
+  createdBy        String // Usuario autenticado
+  createdByName    String // Guarda el nombre en la base de datos
+  updatedBy        String?
+  updatedByName    String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
 
-  @@index([planFijoId]) // Índice en clave foránea
+model Rol {
+  id     Int       @id @default(autoincrement())
+  nombre String    @unique
+  users  RolUser[]
+}
+
+model RolUser {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  rolId  Int
+  user   User @relation(fields: [userId], references: [id])
+  rol    Rol  @relation(fields: [rolId], references: [id])
+
+  @@unique([userId, rolId]) // Un usuario no puede tener el mismo rol dos veces
+}
+
+model Student {
+  id                Int          @id @default(autoincrement())
+  userId            Int          @unique
+  user              User         @relation(fields: [userId], references: [id])
+  planFijoId        Int?
+  enrollments       Enrollment[]
+  paymentsMade      Payment[]    @relation("PaymentsMade")
+  paymentsReceived  Payment[]    @relation("PaymentsReceived")
+  evaluations       Evaluation[]
+  absences          Absence[]
+  Grade             Grade[]
+  Plan              Plan[]
+  studentAssociates Enrollment[] @relation("StudentAssociates")
+  Payment           Payment[]
+  createdBy         String // Usuario autenticado
+  createdByName     String // Guarda el nombre en la base de datos
+  updatedBy         String?
+  updatedByName     String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model PlanItem {
+  id        Int      @id @default(autoincrement())
+  planId    Int
+  cursoId   Int // Curso asociado
+  cantidad  Int // Cantidad de este curso en el plan
+  descuento Float // Porcentaje de descuento para este curso
+  plan      Plan     @relation(fields: [planId], references: [id])
+  curso     Course   @relation(fields: [cursoId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Course {
-  id                Int          @id @default(autoincrement())
-  nombre            String
-  descripcion       String
-  duracion          Int
-  revenuePercentage Float        @default(0.0) // Porcentaje de recaudación del curso
-  subjects          Subject[]    @relation("CourseSubjects") // Relación con materias
-  Grade             Grade[]
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  enrollments       Enrollment[] @relation("EnrollmentCourses")
+  id            Int          @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  duracion      Int
+  precio        Float // Precio base del curso
+  subjects      Subject[]    @relation("CourseSubjects") // Relación con materias
+  Grade         Grade[]
+  enrollments   Enrollment[] @relation("EnrollmentCourses")
+  PlanItem      PlanItem[]
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([id]) // Índice en ID del curso para optimización de consultas
 }
 
 model Subject {
-  id          Int              @id @default(autoincrement())
-  nombre      String
-  descripcion String
-  cursoId     Int?
-  evaluations Evaluation[]
-  grades      Grade[]
-  absences    Absence[] // Relación con ausencias asociadas a esta materia
-  course      Course[]         @relation("CourseSubjects") // Relación inversa con cursos
-  teachers    SubjectTeacher[] // Relación con múltiples profesores
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  Absence Absence[] @relation("SubjectAbsence")
+  id            Int          @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  cursoId       Int?
+  evaluations   Evaluation[]
+  grades        Grade[]
+  absences      Absence[] // Relación con ausencias asociadas a esta materia
+  course        Course[]     @relation("CourseSubjects") // Relación inversa con cursos
+  teachers      Teacher[]    @relation("TeacherSubjects") // Relación directa con profesores
+  Absence       Absence[]    @relation("SubjectAbsence")
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Teacher {
-  id        Int              @id @default(autoincrement())
-  nombre    String
-  apellido  String
-  email     String
-  telefono  String
-  subjects  SubjectTeacher[] // Relación con las materias que imparte el maestro
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-}
-
-model SubjectTeacher {
-  id        Int @id @default(autoincrement())
-  subjectId Int
-  teacherId Int
-
-  subject Subject @relation(fields: [subjectId], references: [id])
-  teacher Teacher @relation(fields: [teacherId], references: [id])
+  id            Int          @id @default(autoincrement())
+  userId        Int          @unique
+  user          User         @relation(fields: [userId], references: [id])
+  subjects      Subject[]    @relation("TeacherSubjects") // Relación directa con materias
+  evaluations   Evaluation[] // Relación nombrada inversa
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Enrollment {
-  id               Int              @id @default(autoincrement())
-  estudianteId     Int
-  fechaInscripcion DateTime
-  estado           EstadoIncripcion //  Puede ser ACTIVO o INACTIVO
-  planId           Int
-  modalidad        ModalidadEstudio // Modalidad de estudio del estudiante en el curso
-  plan             Plan             @relation(fields: [planId], references: [id]) // Relación con Plan
-
-  student   Student   @relation(fields: [estudianteId], references: [id])
-  courses   Course[]  @relation("EnrollmentCourses") // Relación con múltiples cursos
-  payments  Payment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                    Int              @id @default(autoincrement())
+  estudianteId          Int
+  fechaInscripcionDesde DateTime
+  fechaInscripcionHasta DateTime?
+  estado                EstadoIncripcion //  Puede ser ACTIVO o INACTIVO
+  planId                Int?
+  modalidad             ModalidadEstudio // Modalidad de estudio del estudiante en el curso
+  plan                  Plan?            @relation(fields: [planId], references: [id]) // Relación con Plan
+  saldoPendiente        Float            @default(0) // Saldo negativo o positivo
+  student               Student          @relation(fields: [estudianteId], references: [id])
+  courses               Course[]         @relation("EnrollmentCourses") // Relación con múltiples cursos
+  payments              Payment[]        @relation("EnrollmentPayments") // Relación correcta con pagos
+  // Relación muchos a muchos con estudiantes asociados
+  estudiantesAsociados  Student[]        @relation("StudentAssociates")
+  createdBy             String // Usuario autenticado
+  createdByName         String // Guarda el nombre en la base de datos
+  updatedBy             String?
+  updatedByName         String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 }
 
 model Payment {
-  id            Int        @id @default(autoincrement())
-  monto         Float
-  fechaPago     DateTime
-  estadoPago    EstadoPago //EstadoPago
-  tipoPago      TipoPago // Nuevo campo para identificar si es matrícula o graduación
-  pagadorId     Int
-  planId        Int
-  comentario    String
-  pagador       Student    @relation("PaymentsMade", fields: [pagadorId], references: [id])
-  beneficiarios Student[]  @relation("PaymentsReceived")
-  plan          Plan       @relation(fields: [id], references: [id]) // Relación con Plan
-
-  Enrollment Enrollment[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-
+  id                   Int                    @id @default(autoincrement())
+  monto                Float
+  fechaPagoMes         DateTime
+  fechaPagoRecibo      DateTime?
+  saldo                Saldo
+  estadoPago           EstadoPago //EstadoPago
+  tipoPago             TipoPago // Nuevo campo para identificar si es matrícula o graduación
+  pagadorId            Int?
+  beneficiadoId        Int?
+  enrollmentId         Int
+  comentario           String
+  saldoAnterior        Float                  @default(0) // Saldo negativo o positivo
+  saldoPosterior       Float                  @default(0) // Saldo negativo o positivo
+  pagador              Student?               @relation("PaymentsMade", fields: [pagadorId], references: [id])
+  beneficiarios        Student[]              @relation("PaymentsReceived")
+  beneficiado          Student?               @relation(fields: [studentId], references: [id])
   FinancialTransaction FinancialTransaction[]
+  enrollment           Enrollment             @relation("EnrollmentPayments", fields: [enrollmentId], references: [id])
+  Plan                 Plan?                  @relation(fields: [planId], references: [id])
+  planId               Int?
+  studentId            Int?
+  pagoReferenciaId     Int? // ✅ Relación con el pago principal
+  createdBy            String // Usuario autenticado
+  createdByName        String // Guarda el nombre en la base de datos
+  updatedBy            String?
+  updatedByName        String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
 }
 
 model Plan {
-  id                    Int          @id @default(autoincrement())
-  nombre                String // Nombre del plan (por ejemplo, "Plan Básico", "Plan Avanzado")
-  descripcion           String
-  precioBase            Float // Precio base del plan
-  cantidadDiplomaturas  Int // Número de diplomaturas que incluye
-  cantidadBachilleratos Int // Número de bachilleratos que incluye
-  precioDiplomatura     Float // Porcentaje de descuento para diplomaturas
-  precioBachillerato    Float // Porcentaje de descuento para bachilleratos
-  estudiantes           Student[]
-  enrollments           Enrollment[]
-  payments              Payment[]
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  id            Int          @id @default(autoincrement())
+  nombre        String // Nombre del plan (por ejemplo, "Plan Básico", "Plan Avanzado")
+  descripcion   String?
+  precioFinal   Float // Precio base del plan
+  items         PlanItem[] // Relación con los cursos incluidos en el plan
+  estudiantes   Student[]
+  enrollments   Enrollment[]
+  payments      Payment[]
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Evaluation {
-  id           Int            @id @default(autoincrement())
-  nombre       String
-  descripcion  String
-  tipo         TipoEvaluacion // Enum para tipo de evaluación
-  fecha        DateTime
-  subjectId    Int
-  estudianteId Int
-  nota         Float
-  comentario   String
-
-  subject   Subject  @relation(fields: [subjectId], references: [id])
-  student   Student  @relation(fields: [estudianteId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  nombre        String
+  descripcion   String
+  tipo          TipoEvaluacion // Enum para tipo de evaluación
+  fecha         DateTime
+  subjectId     Int
+  estudianteId  Int
+  nota          Float
+  comentario    String
+  teacherId     Int // Nuevo campo para la relación con Teacher
+  subject       Subject        @relation(fields: [subjectId], references: [id])
+  student       Student        @relation(fields: [estudianteId], references: [id])
+  teacher       Teacher        @relation(fields: [teacherId], references: [id]) // Relación nombrada
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Absence {
-  id           Int      @id @default(autoincrement())
-  fecha        DateTime
-  motivo       String?
-  estudianteId Int
-  subjectId    Int
-
-  student   Student  @relation(fields: [estudianteId], references: [id])
-  subject   Subject  @relation("SubjectAbsence", fields: [subjectId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  fecha         DateTime
+  motivo        String?
+  estudianteId  Int
+  subjectId     Int
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  student       Student  @relation(fields: [estudianteId], references: [id])
+  subject       Subject  @relation("SubjectAbsence", fields: [subjectId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   Subject Subject[]
 }
 
 model Grade {
-  id           Int   @id @default(autoincrement())
-  subjectId    Int
-  estudianteId Int
-  cursoId      Int
-  promedio     Float
-
-  subject   Subject  @relation(fields: [subjectId], references: [id])
-  student   Student  @relation(fields: [estudianteId], references: [id])
-  course    Course   @relation(fields: [cursoId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  subjectId     Int
+  estudianteId  Int
+  cursoId       Int
+  promedio      Float
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+  student       Student  @relation(fields: [estudianteId], references: [id])
+  course        Course   @relation(fields: [cursoId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([subjectId, estudianteId, cursoId]) // Índice compuesto para mejorar consultas
 }
 
 model FinancialTransaction {
-  id          Int             @id @default(autoincrement())
-  fecha       DateTime
-  monto       Float
-  tipo        TransactionType
-  descripcion String?
-  Payment     Payment?        @relation(fields: [paymentId], references: [id])
-  paymentId   Int?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id            Int             @id @default(autoincrement())
+  fecha         DateTime
+  monto         Float
+  tipo          TransactionType
+  descripcion   String?
+  Payment       Payment?        @relation(fields: [paymentId], references: [id])
+  paymentId     Int?
+  createdBy     String // Usuario autenticado
+  createdByName String // Guarda el nombre en la base de datos
+  updatedBy     String?
+  updatedByName String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 enum TransactionType {
@@ -217,13 +303,25 @@ enum EstadoPago {
   COMPLETADO
   FALLADO
   INCOMPLETO
+  PAGO_PARCIAL
+}
+
+enum Saldo {
+  SALDO_A_FAVOR
+  SALDO_NEGATIVO
+  SALDO_JUSTO
 }
 
 enum TipoPago {
   MATRICULA
   GRADUACION
-  CUOTA
+  CUOTA_MENSUAL
   OTRO
+}
+
+enum UserState {
+  ACTIVO
+  INACTIVO
 }
 
 enum EstadoIncripcion {
@@ -233,10 +331,20 @@ enum EstadoIncripcion {
 }
 
 enum TipoEvaluacion {
+  CALIFICACION_FINAL
   PARTICIPACION_CLASE
   LECTURA
   TAREA
   EXAMEN
   PROYECTO_FINAL
   OTRO
+}
+
+enum UserType {
+  ESTUDIANTE
+  PROFESOR
+  ADMINISTRATIVO
+  COORDINADOR
+  DIRECTOR
+  ADMINISTRADOR
 }

@@ -80,18 +80,35 @@ export function DataTable<TData, TValue>({
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-												  )}
-										</TableHead>
-									);
-								})}
+								{headerGroup.headers.map(header => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<div
+												onClick={header.column.getToggleSortingHandler()}
+												className="cursor-pointer flex items-center"
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext()
+												)}
+												{header.column.getIsSorted() === 'asc' && (
+													<span className="ml-2">⬆️</span> // Icono para orden ascendente
+												)}
+												{header.column.getIsSorted() === 'desc' && (
+													<span className="ml-2">⬇️</span> // Icono para orden descendente
+												)}
+												{header.column.getIsSorted() === false && (
+													<span className="ml-2">↕️</span> // Icono por defecto (ordenable)
+												)}
+											</div>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)
+										)}
+									</TableHead>
+								))}
 							</TableRow>
 						))}
 					</TableHeader>

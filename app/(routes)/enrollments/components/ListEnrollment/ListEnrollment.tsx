@@ -20,7 +20,11 @@ export async function Enrollments() {
 		},
 		include: {
 			plan: true, // Incluye la información de la materia
-			student: true, // Incluye la información del estudiante
+			student: {
+				include: {
+					user: true, // Incluye el usuario relacionado con el estudiante
+				},
+			}, // Incluye la información del estudiante
 			courses: true,
 		},
 	});
@@ -36,6 +40,7 @@ export async function Enrollments() {
 
 	const dataWithCourses = enrollments.map(enrollment => ({
 		...enrollment,
+		user: enrollment.student?.user, // Agrega los datos del usuario
 		courseNames: enrollment.courses.map(course => course.nombre).join(', '), // Cambia "name" según el campo que quieras mostrar
 	}));
 

@@ -7,7 +7,7 @@ export async function PATCH(
 	{ params }: { params: { enrollmentId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { enrollmentId } = params;
 		const values = await req.json();
 
@@ -21,8 +21,12 @@ export async function PATCH(
 			},
 			data: {
 				...values,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
+				updatedBy: userId,
 				courses: {
-					connect: values.courses.map((id: number) => ({ id })), // Conecta las materias por ID
+					set: values.courses.map((id: number) => ({ id })), // Conecta las materias por ID
 				},
 			},
 		});

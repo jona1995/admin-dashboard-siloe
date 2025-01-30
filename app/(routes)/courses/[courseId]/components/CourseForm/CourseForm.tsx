@@ -17,12 +17,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import {
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 
@@ -42,13 +37,12 @@ export function CourseForm(props: CourseFormProps) {
 			nombre: course.nombre,
 			descripcion: course.descripcion,
 			duracion: Number(course.duracion),
-			revenuePercentage: Number(course.revenuePercentage),
+			precio: Number(course.duracion),
 			subjects: course.subjects.map(subject => subject.id.toString()),
 		},
 	});
 
 	const [subjects, setSubjects] = useState<Subject[]>([]); // Estado para
-	const [searchQuery, setSearchQuery] = React.useState('');
 	const subjectOptions = subjects.map(subject => ({
 		value: subject.id.toString(), // El ID debe ser el valor que se pasará al formulario
 		label: subject.nombre, // El nombre será lo que se mostrará en la opción
@@ -121,10 +115,10 @@ export function CourseForm(props: CourseFormProps) {
 						name="duracion"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Duracion</FormLabel>
+								<FormLabel>Duracion (Meses)</FormLabel>
 								<FormControl>
 									<Input
-										placeholder="Duracion..."
+										placeholder="Duracion (Meses)..."
 										type="text"
 										{...field}
 										onChange={e =>
@@ -139,14 +133,14 @@ export function CourseForm(props: CourseFormProps) {
 					/>
 					<FormField
 						control={form.control}
-						name="revenuePercentage"
+						name="precio"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Porcentaje Recaudacion</FormLabel>
+								<FormLabel>Precio</FormLabel>
 								<FormControl>
 									<Input
-										placeholder="Porcentaje Recaudacion..."
-										type="text"
+										placeholder="Precio..."
+										type="number"
 										{...field}
 										onChange={e =>
 											field.onChange(
@@ -155,7 +149,6 @@ export function CourseForm(props: CourseFormProps) {
 										}
 									/>
 								</FormControl>
-								<FormMessage />
 							</FormItem>
 						)}
 					/>

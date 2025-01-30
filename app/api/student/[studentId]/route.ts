@@ -7,10 +7,10 @@ export async function PATCH(
 	{ params }: { params: { studentId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { studentId } = params;
 		const values = await req.json();
-
+		user?.firstName;
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
@@ -21,6 +21,10 @@ export async function PATCH(
 			},
 			data: {
 				...values,
+				updatedBy: userId,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 			},
 		});
 

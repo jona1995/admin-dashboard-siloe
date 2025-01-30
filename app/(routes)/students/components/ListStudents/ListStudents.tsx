@@ -18,7 +18,25 @@ export async function Students() {
 		orderBy: {
 			createdAt: 'desc',
 		},
+		include: {
+			user: true, // Incluir la relación de Usuario con el Estudiante
+		},
 	});
-
-	return <DataTable columns={columns} data={students} />;
+	// Mapea los estudiantes para mostrar la información del usuario asociada
+	const studentData = students.map(student => ({
+		id: student.id,
+		nombre: student.user.nombre,
+		apellido: student.user.apellido,
+		cedula: student.user.cedula,
+		email: student.user.email,
+		telefono: student.user.telefono,
+		iglesia: student.user.iglesia,
+		localidadIglesia: student.user.localidadIglesia,
+		createdAt: student.createdAt,
+		updatedAt: student.updatedAt,
+		createdByName: student.createdByName,
+		updatedByName: student.updatedByName,
+		// Puedes agregar más campos si es necesario
+	}));
+	return <DataTable columns={columns} data={studentData} />;
 }

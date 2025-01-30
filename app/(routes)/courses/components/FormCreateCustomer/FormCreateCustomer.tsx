@@ -30,10 +30,10 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 
 const formSchema = z.object({
-	nombre: z.string(),
+	nombre: z.string().min(1, { message: 'El nombre es obligatorio.' }),
 	descripcion: z.string(),
-	duracion: z.number(),
-	revenuePercentage: z.number(),
+	duracion: z.number().min(1, { message: 'La duracion es obligatorio.' }),
+	precio: z.number().min(1, { message: 'El precio es obligatorio.' }),
 	subjects: z.array(z.string()),
 });
 // Define the interface for the subject
@@ -56,12 +56,11 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 			nombre: '',
 			descripcion: '',
 			duracion: undefined,
-			revenuePercentage: undefined,
+			precio: undefined,
 			subjects: [],
 		},
 	});
 	const [subjects, setSubjects] = useState<Subject[]>([]);
-	const [searchQuery, setSearchQuery] = React.useState('');
 
 	useEffect(() => {
 		const fetchSubjects = async () => {
@@ -144,17 +143,19 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 							name="duracion"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Duracion</FormLabel>
+									<FormLabel>Duracion (Meses)</FormLabel>
 									<FormControl>
 										<Input
-											placeholder="Duracion..."
+											placeholder="Duracion (Meses)..."
 											type="text"
 											{...field}
-											onChange={e =>
-												field.onChange(
-													e.target.value ? Number(e.target.value) : undefined
-												)
-											}
+											onChange={e => {
+												const newValue = e.target.value
+													? Number(e.target.value)
+													: 0;
+												// Verificar si el valor es negativo y no permitirlo
+												field.onChange(newValue >= 0 ? newValue : 0);
+											}}
 										/>
 									</FormControl>
 									<FormMessage />
@@ -163,27 +164,28 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 						/>
 						<FormField
 							control={form.control}
-							name="revenuePercentage"
+							name="precio"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Porcentaje Recaudacion</FormLabel>
+									<FormLabel>Precio</FormLabel>
 									<FormControl>
 										<Input
-											placeholder="Porcentaje Recaudacion..."
+											placeholder="Precio..."
 											type="text"
 											{...field}
-											onChange={e =>
-												field.onChange(
-													e.target.value ? Number(e.target.value) : undefined
-												)
-											}
+											onChange={e => {
+												const newValue = e.target.value
+													? Number(e.target.value)
+													: 0;
+												// Verificar si el valor es negativo y no permitirlo
+												field.onChange(newValue >= 0 ? newValue : 0);
+											}}
 										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-
 						<FormField
 							control={form.control}
 							name="subjects"

@@ -28,6 +28,7 @@ export const columns: ColumnDef<Subject>[] = [
 	{
 		id: 'actions',
 		header: 'Actions',
+		enableSorting: false,
 		cell: ({ row }) => {
 			const { id } = row.original;
 			return (

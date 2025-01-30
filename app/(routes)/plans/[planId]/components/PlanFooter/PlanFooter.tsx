@@ -9,10 +9,27 @@ import { Button } from '@/components/ui/button';
 
 import { PlanFooterProps } from './PlanFooter.types';
 import { toast } from '@/components/ui/use-toast';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
+import { useState } from 'react';
 
 export function PlanFooter(props: PlanFooterProps) {
 	const { planId } = props;
 	const router = useRouter();
+	const [isModalOpen, setIsModalOpen] = useState(false);
+
+	const handleDelete = () => {
+		setIsModalOpen(true);
+	};
+
+	const confirmDelete = () => {
+		console.log(`Eliminando el registro con ID: ${planId}`);
+		onDeletePlan();
+		setIsModalOpen(false);
+	};
+
+	const cancelDelete = () => {
+		setIsModalOpen(false);
+	};
 
 	const onDeletePlan = async () => {
 		try {
@@ -32,10 +49,19 @@ export function PlanFooter(props: PlanFooterProps) {
 
 	return (
 		<div className="flex justify-end mt-5">
-			<Button variant="destructive" onClick={onDeletePlan}>
+			<Button variant="destructive" onClick={() => handleDelete()}>
 				<Trash className="w-4 h-4 mr-2" />
 				Eliminar Plan
 			</Button>
+
+			{/* Modal de Confirmación */}
+			<ConfirmationModal
+				isOpen={isModalOpen}
+				title="¿Estás seguro?"
+				description="Esta acción no se puede deshacer. ¿Deseas continuar?"
+				onConfirm={confirmDelete}
+				onCancel={cancelDelete}
+			/>
 		</div>
 	);
 }

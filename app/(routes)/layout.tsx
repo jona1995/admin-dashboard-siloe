@@ -1,18 +1,27 @@
-import { Navbar } from "@/components/NavBar";
-import { Sidebar } from "@/components/Sidebar";
+import { Navbar } from '@/components/Navbar';
+import { Sidebar } from '@/components/Sidebar';
+import GlobalLoader from './globalLoader/globalLoader';
 
-export default function LayoutDashboard({ children }: { children: React.ReactElement }) {
-    return (
-        <div className="flex w-full h-full">
-            <div className="hidden xl:block w-80 h-full xl:fixed">
-                <Sidebar />
-            </div>
-            <div className="w-full xl:ml-80 h-full">
-                <Navbar />
-                <div className="p-6 bg-[#fafbfc] dark:bg-secondary">
-                    {children}
-                </div>
-            </div>
-        </div>
-    )
+export default function LayoutDashboard({
+	children,
+}: {
+	children: React.ReactElement;
+}) {
+	return (
+		<div className="flex w-full h-full">
+			{/* Sidebar */}
+			<div className="hidden xl:block w-80 h-full fixed">
+				<Sidebar />
+			</div>
+
+			{/* Main Content */}
+			<div className="w-full xl:pl-80 h-full overflow-auto">
+				<Navbar />
+				<div className="p-6 bg-[#fafbfc] dark:bg-secondary min-h-full">
+					{/* Componente GlobalLoader que envolverá todo */}
+					<GlobalLoader>{children}</GlobalLoader>
+				</div>
+			</div>
+		</div>
+	);
 }

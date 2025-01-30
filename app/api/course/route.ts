@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const data = await req.json();
 
 		if (!userId) {
@@ -14,6 +14,10 @@ export async function POST(req: Request) {
 		const course = await db.course.create({
 			data: {
 				...data,
+				createdBy: userId,
+				createdByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 				subjects: {
 					connect: data.subjects.map((id: number) => ({ id })), // Conecta las materias por ID
 				},

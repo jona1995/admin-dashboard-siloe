@@ -66,12 +66,35 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div className="p-4 mt-4 rounded-lg shadow-md bg-background">
-			<div className="flex items-center mb-2">
+			<div className="flex items-center mb-2 space-x-4">
 				<Input
 					placeholder="Filtrar por nombre..."
 					value={(table.getColumn('nombre')?.getFilterValue() as string) ?? ''}
 					onChange={event =>
 						table.getColumn('nombre')?.setFilterValue(event.target.value)
+					}
+				/>
+				<Input
+					placeholder="Filtrar por apellido..."
+					value={
+						(table.getColumn('apellido')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('apellido')?.setFilterValue(event.target.value)
+					}
+				/>
+				<Input
+					placeholder="Filtrar por cedula..."
+					value={(table.getColumn('cedula')?.getFilterValue() as string) ?? ''}
+					onChange={event =>
+						table.getColumn('cedula')?.setFilterValue(event.target.value)
+					}
+				/>
+				<Input
+					placeholder="Filtrar por iglesia..."
+					value={(table.getColumn('iglesia')?.getFilterValue() as string) ?? ''}
+					onChange={event =>
+						table.getColumn('iglesia')?.setFilterValue(event.target.value)
 					}
 				/>
 			</div>
@@ -80,18 +103,35 @@ export function DataTable<TData, TValue>({
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-												  )}
-										</TableHead>
-									);
-								})}
+								{headerGroup.headers.map(header => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<div
+												onClick={header.column.getToggleSortingHandler()}
+												className="cursor-pointer flex items-center"
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext()
+												)}
+												{header.column.getIsSorted() === 'asc' && (
+													<span className="ml-2">⬆️</span> // Icono para orden ascendente
+												)}
+												{header.column.getIsSorted() === 'desc' && (
+													<span className="ml-2">⬇️</span> // Icono para orden descendente
+												)}
+												{header.column.getIsSorted() === false && (
+													<span className="ml-2">↕️</span> // Icono por defecto (ordenable)
+												)}
+											</div>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)
+										)}
+									</TableHead>
+								))}
 							</TableRow>
 						))}
 					</TableHeader>

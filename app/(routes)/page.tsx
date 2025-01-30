@@ -10,20 +10,47 @@ import { db } from '@/lib/db';
 
 import moment from 'moment';
 
-const startOfMonth = moment().startOf('month').toDate(); // Inicio del mes
-const endOfMonth = moment().endOf('month').toDate(); // Fin del mes
-const total = await db.payment.aggregate({
-	_sum: {
-		monto: true, // Campo que suma el monto total
-	},
-	where: {
-		fechaPago: {
-			gte: startOfMonth, // Desde el inicio del mes
-			lte: endOfMonth, // Hasta el final del mes
-		},
-	},
-});
-console.log(total);
+// const startOfMonth = moment().startOf('month').toDate(); // Inicio del mes
+// const endOfMonth = moment().endOf('month').toDate(); // Fin del mes
+// const total = await db.payment.aggregate({
+// 	_sum: {
+// 		monto: true, // Campo que suma el monto total
+// 	},
+// 	where: {
+// 		fechaPagoMes: {
+// 			gte: startOfMonth, // Desde el inicio del mes
+// 			lte: endOfMonth, // Hasta el final del mes
+// 		},
+// 	},
+// });
+// console.log(total);
+
+// const totalCuota = await db.enrollment
+// 	.findMany({
+// 		where: {
+// 			estado: 'ACTIVO', // Filtrar solo inscripciones activas
+// 			payments: {
+// 				none: {
+// 					fechaPagoMes: {
+// 						gte: startOfMonth,
+// 						lte: endOfMonth, // Cuotas correspondientes al mes actual
+// 					},
+// 				},
+// 			},
+// 		},
+// 		include: {
+// 			courses: true, // Relación con los cursos para obtener la cuota mensual
+// 		},
+// 	})
+// 	.then(enrollments => {
+// 		return enrollments.reduce((total, enrollment) => {
+// 			const monthlyQuota = enrollment.courses.reduce(
+// 				(sum, course) => sum + course.precio,
+// 				0
+// 			);
+// 			return total + monthlyQuota;
+// 		}, 0);
+// 	});
 const dataCardsSummary = [
 	{
 		icon: UsersRound,
@@ -32,13 +59,20 @@ const dataCardsSummary = [
 		title: 'Total Estudiantes',
 		tooltipText: 'Estudiantes creados',
 	},
-	{
-		icon: Waypoints,
-		total: total._sum.monto || '',
-		average: 80,
-		title: 'Total Cuotas del Mes',
-		tooltipText: 'Total de cuotas del mes',
-	},
+	// {
+	// 	icon: Waypoints,
+	// 	total: total._sum.monto || '',
+	// 	average: 80,
+	// 	title: 'Total Cuotas del Mes Ingresos',
+	// 	tooltipText: 'Total de pago cuota mes',
+	// },
+	// {
+	// 	icon: Waypoints,
+	// 	total: totalCuota || '',
+	// 	average: 80,
+	// 	title: 'Total Cuotas del Mes a pagar',
+	// 	tooltipText: 'Total de pago cuota mes',
+	// },
 	{
 		icon: BookOpenCheck,
 		total: (await db.enrollment.count()) || '',

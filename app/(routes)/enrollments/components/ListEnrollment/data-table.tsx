@@ -25,6 +25,8 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select } from '@radix-ui/react-select';
+import { EstadoIncripcion, ModalidadEstudio } from '../../utils/type';
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -66,35 +68,128 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div className="p-4 mt-4 rounded-lg shadow-md bg-background">
-			<div className="flex items-center mb-2">
+			{/* Filtros */}
+			<div className="flex items-center mb-2 space-x-4">
 				<Input
-					placeholder="Filtrar por nombre..."
-					value={(table.getColumn('nombre')?.getFilterValue() as string) ?? ''}
+					name="fechaDesde"
+					placeholder="Fecha desde..."
+					value={
+						(table
+							.getColumn('fechaInscripcionDesde')
+							?.getFilterValue() as string) ?? ''
+					}
+					onChange={event => {
+						const fromDate = event.target.value;
+						table.getColumn('fechaInscripcionDesde')?.setFilterValue(fromDate);
+					}}
+				/>
+				<Input
+					name="fechaHasta"
+					placeholder="Fecha Hasta..."
+					value={
+						(table
+							.getColumn('fechaInscripcionHasta')
+							?.getFilterValue() as string) ?? ''
+					}
+					onChange={event => {
+						const fromDate = event.target.value;
+						table.getColumn('fechaInscripcionHasta')?.setFilterValue(fromDate);
+					}}
+				/>
+				<Input
+					name="estudianteId"
+					placeholder="Filtrar por estudiante..."
+					value={
+						(table.getColumn('estudianteId')?.getFilterValue() as string) ?? ''
+					}
 					onChange={event =>
-						table.getColumn('nombre')?.setFilterValue(event.target.value)
+						table.getColumn('estudianteId')?.setFilterValue(event.target.value)
 					}
 				/>
+				<Input
+					name="courseNames"
+					placeholder="Filtrar por curso..."
+					value={
+						(table.getColumn('courseNames')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('courseNames')?.setFilterValue(event.target.value)
+					}
+				/>
+
+				<select
+					name="estado"
+					value={(table.getColumn('estado')?.getFilterValue() as string) ?? ''}
+					onChange={event =>
+						table.getColumn('estado')?.setFilterValue(event.target.value)
+					}
+					className="border rounded p-2"
+				>
+					<option value="">Todos</option>
+					{Object.values(EstadoIncripcion).map(estado => (
+						<option key={estado} value={estado}>
+							{estado}
+						</option>
+					))}
+				</select>
+				<select
+					name="modalidad"
+					value={
+						(table.getColumn('modalidad')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('modalidad')?.setFilterValue(event.target.value)
+					}
+					className="border rounded p-2"
+				>
+					<option value="">Todos</option>
+					{Object.values(ModalidadEstudio).map(modalidad => (
+						<option key={modalidad} value={modalidad}>
+							{modalidad}
+						</option>
+					))}
+				</select>
 			</div>
+
+			{/* Tabla */}
 			<div className="border rounded-md">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-												  )}
-										</TableHead>
-									);
-								})}
+								{headerGroup.headers.map(header => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<div
+												onClick={header.column.getToggleSortingHandler()}
+												className="cursor-pointer flex items-center"
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext()
+												)}
+												{header.column.getIsSorted() === 'asc' && (
+													<span className="ml-2">⬆️</span>
+												)}
+												{header.column.getIsSorted() === 'desc' && (
+													<span className="ml-2">⬇️</span>
+												)}
+												{header.column.getIsSorted() === false && (
+													<span className="ml-2">↕️</span>
+												)}
+											</div>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)
+										)}
+									</TableHead>
+								))}
 							</TableRow>
 						))}
 					</TableHeader>
+
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => (
@@ -125,23 +220,48 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</div>
-			<div className="flex items-center justify-end py-4 space-x-2">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => table.previousPage()}
-					disabled={!table.getCanPreviousPage()}
-				>
-					Previous
-				</Button>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => table.nextPage()}
-					disabled={!table.getCanNextPage()}
-				>
-					Next
-				</Button>
+
+			{/* Controles de paginación */}
+			<div className="flex items-center justify-between py-4">
+				{/* Selector de filas por página */}
+				<div className="flex items-center space-x-2">
+					<span>Rows per page:</span>
+					<select
+						value={table.getState().pagination.pageSize}
+						onChange={e => table.setPageSize(Number(e.target.value))}
+						className="border rounded p-2"
+					>
+						{[5, 10, 20, 30, 40, 50, 100].map(pageSize => (
+							<option key={pageSize} value={pageSize}>
+								{pageSize}
+							</option>
+						))}
+					</select>
+				</div>
+
+				{/* Controles de navegación */}
+				<div className="flex items-center space-x-2">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => table.previousPage()}
+						disabled={!table.getCanPreviousPage()}
+					>
+						Previous
+					</Button>
+					<span>
+						Page {table.getState().pagination.pageIndex + 1} of{' '}
+						{table.getPageCount()}
+					</span>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => table.nextPage()}
+						disabled={!table.getCanNextPage()}
+					>
+						Next
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

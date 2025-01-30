@@ -50,7 +50,7 @@ export function StudentForm(props: StudentFormProps) {
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			await axios.patch(`/api/student/${student.id}`, values);
+			await axios.patch(`/api/user/${student.id}`, values);
 			toast({
 				title: 'Estudiante actualizado!',
 			});

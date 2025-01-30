@@ -18,6 +18,13 @@ export async function Plans() {
 		orderBy: {
 			createdAt: 'desc',
 		},
+		include: {
+			items: {
+				include: {
+					curso: true, // Esto incluye la relación con los cursos
+				},
+			},
+		},
 	});
 
 	return <DataTable columns={columns} data={plans} />;

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const data = await req.json();
 
 		if (!userId) {
@@ -14,6 +14,9 @@ export async function POST(req: Request) {
 		const absences = await db.absence.create({
 			data: {
 				...data,
+				createdByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 			},
 		});
 

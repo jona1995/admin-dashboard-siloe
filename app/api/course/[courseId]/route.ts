@@ -8,22 +8,26 @@ export async function PATCH(
 	{ params }: { params: { courseId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { courseId } = params;
 		const values = await req.json();
 
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
-
+		console.log('USER', userId);
 		const course = await db.course.update({
 			where: {
 				id: parseInt(courseId, 10),
 			},
 			data: {
 				...values,
+				updatedBy: userId,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 				subjects: {
-					connect: values.subjects.map((id: number) => ({ id })), // Conecta las materias por ID
+					set: values.subjects.map((id: number) => ({ id })), // Conecta las materias por ID
 				},
 			},
 		});

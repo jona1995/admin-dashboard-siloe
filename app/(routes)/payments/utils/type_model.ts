@@ -10,7 +10,7 @@ import {
 export type Payment_model = {
 	id: number;
 	monto: number;
-	fechaPago: Date;
+	fechaPagoMes: Date;
 	estadoPago: EstadoPago;
 	tipoPago: TipoPago;
 	pagadorId: number;

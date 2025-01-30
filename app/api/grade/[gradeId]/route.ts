@@ -7,7 +7,7 @@ export async function PATCH(
 	{ params }: { params: { gradeId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { gradeId } = params;
 		const values = await req.json();
 
@@ -21,6 +21,10 @@ export async function PATCH(
 			},
 			data: {
 				...values,
+				updatedBy: userId,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 			},
 		});
 

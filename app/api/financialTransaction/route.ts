@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const data = await req.json();
 
 		if (!userId) {
@@ -21,6 +21,10 @@ export async function POST(req: Request) {
 		const financialTransactions = await db.financialTransaction.create({
 			data: {
 				...data,
+				createdBy: userId,
+				createdByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 			},
 		});
 

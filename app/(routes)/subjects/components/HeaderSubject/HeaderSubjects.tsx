@@ -23,7 +23,7 @@ export function HeaderSubjects() {
 				<DialogTrigger asChild>
 					<Button>Crear Materia</Button>
 				</DialogTrigger>
-				<DialogContent className="sm:max-w-[625px]">
+				<DialogContent className="sm:max-w-[725px] sm:max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>Crear Materia</DialogTitle>
 						<DialogDescription>

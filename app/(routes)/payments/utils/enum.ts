@@ -6,7 +6,7 @@ export enum EstadoPago {
 }
 
 export enum TipoPago {
-	CUOTA = 'CUOTA',
+	CUOTA_MENSUAL = 'CUOTA_MENSUAL',
 	MATRICULA = 'MATRICULA',
 	GRADUACION = 'GRADUACION',
 	OTRO = 'OTRO',

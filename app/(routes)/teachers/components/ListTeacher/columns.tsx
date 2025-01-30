@@ -33,8 +33,21 @@ export const columns: ColumnDef<Teacher>[] = [
 		header: 'Email',
 	},
 	{
+		accessorKey: 'iglesia',
+		header: 'Iglesia',
+	},
+	{
+		accessorKey: 'localidadIglesia',
+		header: 'Localidad Iglesia',
+	},
+	{
+		accessorKey: 'subjectsNames',
+		header: 'Materias',
+	},
+	{
 		id: 'actions',
 		header: 'Actions',
+		enableSorting: false,
 		cell: ({ row }) => {
 			const { id } = row.original;
 			return (

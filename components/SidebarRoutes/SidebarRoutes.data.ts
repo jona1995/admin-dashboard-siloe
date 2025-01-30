@@ -1,6 +1,5 @@
 import {
 	BarChart4,
-	Building2,
 	PanelsTopLeft,
 	Settings,
 	ShieldCheck,
@@ -17,6 +16,8 @@ import {
 	BookOpenText,
 	CircleDollarSign,
 	CirclePercent,
+	MoveDown,
+	HandCoins,
 } from 'lucide-react';
 
 export const dataGeneralSidebar = [
@@ -31,26 +32,25 @@ export const dataGeneralSidebar = [
 		href: '/students',
 	},
 	{
-		icon: UserCheck,
-		label: 'Profesores',
-		href: '/teachers',
-	},
-	{
 		icon: LibraryBig,
 		label: 'Materias',
 		href: '/subjects',
 	},
 	{
-		icon: CirclePercent,
-		label: 'Planes',
-		href: '/plans',
+		icon: UserCheck,
+		label: 'Profesores',
+		href: '/teachers',
 	},
 	{
 		icon: BookOpenText,
 		label: 'Cursos',
 		href: '/courses',
 	},
-
+	{
+		icon: CirclePercent,
+		label: 'Planes',
+		href: '/plans',
+	},
 	{
 		icon: BookText,
 		label: 'Inscripciones',
@@ -70,6 +70,16 @@ export const dataGeneralSidebar = [
 		icon: DollarSign,
 		label: 'Pagos',
 		href: '/payments',
+	},
+	{
+		icon: MoveDown,
+		label: 'Deudores',
+		href: '/debtors',
+	},
+	{
+		icon: HandCoins,
+		label: 'Recaudacion',
+		href: '/recaudacion',
 	},
 	{
 		icon: CircleDollarSign,

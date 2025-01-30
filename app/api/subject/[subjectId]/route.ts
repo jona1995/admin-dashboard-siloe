@@ -7,20 +7,24 @@ export async function PATCH(
 	{ params }: { params: { subjectId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { subjectId } = params;
 		const values = await req.json();
 
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
-
+		console.log('user', userId);
 		const subject = await db.subject.update({
 			where: {
 				id: parseInt(subjectId, 10),
 			},
 			data: {
 				...values,
+				updatedBy: userId,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
 			},
 		});
 

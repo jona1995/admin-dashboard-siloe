@@ -14,6 +14,7 @@ export async function POST(req: Request) {
 		const evaluation = await db.evaluation.create({
 			data: {
 				...data,
+				createdBy: userId,
 			},
 		});
 

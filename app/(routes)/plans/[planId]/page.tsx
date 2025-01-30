@@ -19,8 +19,15 @@ export default async function PlanIdPage({
 		where: {
 			id: parseInt(params.planId, 10),
 		},
+		include: {
+			items: {
+				include: {
+					curso: true,
+				},
+			},
+		},
 	});
-
+	console.log(plan);
 	if (!plan) {
 		return redirect('/');
 	}

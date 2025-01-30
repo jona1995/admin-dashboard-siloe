@@ -21,8 +21,18 @@ export const columns: ColumnDef<Course>[] = [
 		header: 'Nombres',
 	},
 	{
-		accessorKey: 'descripcion',
-		header: 'Descripcion',
+		accessorKey: 'precio',
+		header: 'Precio',
+		cell: ({ row }) => {
+			const precio = row.original.precio; // Obtén el valor del precio
+			return (
+				<div className="flex items-center">
+					<span className="text-gray-500">$</span>
+					<span className="ml-1">{Number(precio).toFixed(2)}</span>{' '}
+					{/* Formato a 2 decimales */}
+				</div>
+			);
+		},
 	},
 	{
 		accessorKey: 'duracion',
@@ -33,13 +43,13 @@ export const columns: ColumnDef<Course>[] = [
 		header: 'Materias',
 	},
 	{
-		accessorKey: 'revenuePercentage',
-		header: 'Porcentaje',
+		accessorKey: 'descripcion',
+		header: 'Descripcion',
 	},
-
 	{
 		id: 'actions',
 		header: 'Actions',
+		enableSorting: false,
 		cell: ({ row }) => {
 			const { id } = row.original;
 			return (

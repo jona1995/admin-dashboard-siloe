@@ -9,10 +9,27 @@ import { Button } from '@/components/ui/button';
 
 import { TeacherFooterProps } from './TeacherFooter.types';
 import { toast } from '@/components/ui/use-toast';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
+import { useState } from 'react';
 
 export function TeacherFooter(props: TeacherFooterProps) {
 	const { teacherId } = props;
 	const router = useRouter();
+	const [isModalOpen, setIsModalOpen] = useState(false);
+
+	const handleDelete = () => {
+		setIsModalOpen(true);
+	};
+
+	const confirmDelete = () => {
+		console.log(`Eliminando el registro con ID: ${teacherId}`);
+		onDeleteTeacher();
+		setIsModalOpen(false);
+	};
+
+	const cancelDelete = () => {
+		setIsModalOpen(false);
+	};
 
 	const onDeleteTeacher = async () => {
 		try {
@@ -32,10 +49,18 @@ export function TeacherFooter(props: TeacherFooterProps) {
 
 	return (
 		<div className="flex justify-end mt-5">
-			<Button variant="destructive" onClick={onDeleteTeacher}>
+			<Button variant="destructive" onClick={() => handleDelete()}>
 				<Trash className="w-4 h-4 mr-2" />
 				Eliminar Profesor
 			</Button>
+			{/* Modal de Confirmación */}
+			<ConfirmationModal
+				isOpen={isModalOpen}
+				title="¿Estás seguro?"
+				description="Esta acción no se puede deshacer. ¿Deseas continuar?"
+				onConfirm={confirmDelete}
+				onCancel={cancelDelete}
+			/>
 		</div>
 	);
 }

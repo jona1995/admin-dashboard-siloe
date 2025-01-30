@@ -37,8 +37,24 @@ export const columns: ColumnDef<EnrichedData>[] = [
 	{
 		accessorKey: 'promedio',
 		header: 'Promedio',
-		cell: ({ row }) => (
-			<span className="font-semibold">{row.original.promedio}</span>
-		),
+		cell: ({ row }) => {
+			const nota = row.original.promedio
+				? parseFloat(row.original.promedio)
+				: 0; // Obtén la nota
+			let colorClass = '';
+
+			// Define los colores según el valor de la nota
+			if (nota >= 9) {
+				colorClass = 'text-green-500'; // Excelente
+			} else if (nota >= 7) {
+				colorClass = 'text-blue-500'; // Bueno
+			} else if (nota >= 5) {
+				colorClass = 'text-yellow-500'; // Regular
+			} else {
+				colorClass = 'text-red-500'; // Insuficiente
+			}
+
+			return <span className={`${colorClass} font-semibold`}>{nota}</span>;
+		},
 	},
 ];

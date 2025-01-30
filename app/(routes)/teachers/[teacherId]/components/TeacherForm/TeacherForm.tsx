@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
+import Select from 'react-select'; // Importa react-select
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,19 +17,14 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 
 import { TeacherFormProps } from './TeacherForm.types';
 import { formSchema } from './TeacherForm.form';
 import { toast } from '@/components/ui/use-toast';
+import { Subject } from '@prisma/client';
 
 export function TeacherForm(props: TeacherFormProps) {
 	const { teacher } = props;
@@ -40,14 +35,41 @@ export function TeacherForm(props: TeacherFormProps) {
 		defaultValues: {
 			nombre: teacher.nombre,
 			apellido: teacher.apellido,
+			cedula: teacher.cedula,
 			telefono: teacher.telefono,
 			email: teacher.email,
+			iglesia: teacher.iglesia,
+			localidadIglesia: teacher.localidadIglesia,
+			subjects: teacher.subjects.map(subject => subject.id.toString()),
 		},
 	});
+	const [subjects, setSubjects] = useState<Subject[]>([]); // Estado para
+	const subjectOptions = subjects.map(subject => ({
+		value: subject.id.toString(), // El ID debe ser el valor que se pasará al formulario
+		label: subject.nombre, // El nombre será lo que se mostrará en la opción
+	}));
+	useEffect(() => {
+		const fetchSubjects = async () => {
+			try {
+				const response = await axios.get<Subject[]>('/api/subject');
+				console.log(response.data); // Log the response data
+				setSubjects(response.data);
+			} catch (error) {
+				console.error('Error fetching subjects:', error);
+			}
+		};
 
+		fetchSubjects();
+	}, []);
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			await axios.patch(`/api/teacher/${teacher.id}`, values);
+			const formattedValues = {
+				...values,
+				subjects: values.subjects.map((subject: string | number) =>
+					Number(subject)
+				), // Asegúrate de que todos los valores sean números
+			};
+			await axios.patch(`/api/teacher/${teacher.id}`, formattedValues);
 			toast({
 				title: 'Profesor actualizado!',
 			});
@@ -88,7 +110,19 @@ export function TeacherForm(props: TeacherFormProps) {
 							</FormItem>
 						)}
 					/>
-
+					<FormField
+						control={form.control}
+						name="cedula"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Cedula</FormLabel>
+								<FormControl>
+									<Input placeholder="Cedula..." type="text" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 					<FormField
 						control={form.control}
 						name="telefono"
@@ -114,6 +148,68 @@ export function TeacherForm(props: TeacherFormProps) {
 								<FormMessage />
 							</FormItem>
 						)}
+					/>
+					<FormField
+						control={form.control}
+						name="iglesia"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Iglesia</FormLabel>
+								<FormControl>
+									<Input placeholder="Iglesia" type="text" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="localidadIglesia"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Localidad Iglesia</FormLabel>
+								<FormControl>
+									<Textarea
+										placeholder="Localidad Iglesia..."
+										{...field}
+										value={form.getValues().localidadIglesia ?? ''}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="subjects"
+						render={({ field }) => {
+							return (
+								<FormItem>
+									<FormLabel>Materias</FormLabel>
+									<FormControl>
+										{/* El componente Select de react-select */}
+										<Select
+											isMulti // Habilita la selección múltiple
+											options={subjectOptions} // Lista de opciones de estudiantes
+											onChange={selectedOptions => {
+												// `selectedOptions` es un array con las opciones seleccionadas
+												const selectedIds = selectedOptions.map(
+													option => option.value
+												);
+												field.onChange(selectedIds); // Guarda los IDs seleccionados
+											}}
+											value={subjectOptions.filter(option =>
+												field.value?.includes(option.value.toString())
+											)} // Filtra las opciones seleccionadas
+											placeholder="Seleccione materias"
+											noOptionsMessage={() => 'No hay materias disponibles'} // Mensaje cuando no hay opciones
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							);
+						}}
 					/>
 				</div>
 				<Button type="submit">Editar Profesor</Button>

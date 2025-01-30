@@ -29,7 +29,7 @@ import { Toast } from '@/components/ui/toast';
 import { EvaluationFormProps } from './EvaluationForm.types';
 import { formSchema } from './EvaluationForm.form';
 import { toast } from '@/components/ui/use-toast';
-import { Student, Subject } from '@prisma/client';
+import { Student, Subject, Teacher } from '@prisma/client';
 import { Tipo } from '../../../utils/enum';
 import moment from 'moment';
 
@@ -44,6 +44,7 @@ export function EvaluationForm(props: EvaluationFormProps) {
 			descripcion: evaluation.descripcion,
 			tipo: evaluation.tipo,
 			fecha: evaluation.fecha,
+			teacherId: evaluation.teacherId.toString(),
 			subjectId: evaluation.subjectId.toString(),
 			estudianteId: evaluation.estudianteId.toString(),
 			nota: evaluation.nota,
@@ -68,8 +69,29 @@ export function EvaluationForm(props: EvaluationFormProps) {
 	}, []);
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
+
+	const [teachers, setTeachers] = useState<Teacher[]>([]); // Estado para
+	useEffect(() => {
+		const fetchTeachers = async () => {
+			try {
+				const response = await axios.get<Teacher[]>('/api/teacher');
+
+				console.log(response.data); // Log the response data
+				setTeachers(response.data);
+			} catch (error) {
+				console.error('Error fetching teachears:', error);
+			}
+		};
+
+		fetchTeachers();
+	}, []);
+	const teachersMap = teachers.map(teacher => ({
+		value: teacher.id,
+		label: teacher.nombre + ' - ' + teacher.cedula, // Capitalizamos el tipo
+	}));
+
 	const tipos = Object.values(Tipo).map(tipo => ({
 		value: tipo,
 		label: tipo.charAt(0).toUpperCase() + tipo.slice(1).toLowerCase(), // Capitalizamos el estado
@@ -99,6 +121,7 @@ export function EvaluationForm(props: EvaluationFormProps) {
 				...values,
 				subjectId: parseInt(values.subjectId, 10), // Convertimos subjects a números
 				estudianteId: parseInt(values.estudianteId, 10), // Convertimos estudiantes a números
+				teacherId: parseInt(values.teacherId, 10),
 			};
 			await axios.patch(`/api/evaluation/${evaluation.id}`, formattedValues);
 			toast({
@@ -223,6 +246,34 @@ export function EvaluationForm(props: EvaluationFormProps) {
 					/>
 					<FormField
 						control={form.control}
+						name="teacherId"
+						render={({ field }) => {
+							return (
+								<FormItem>
+									<FormLabel>Profesor</FormLabel>
+									<FormControl>
+										{/* El componente Select de react-select para TipoPago */}
+										<Select
+											options={teachersMap} // Usamos el array de tipos de pago
+											onChange={selectedOption => {
+												console.log(field);
+												field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
+											}}
+											value={teachersMap.find(
+												option =>
+													option.value.toString() === field.value.toString()
+											)} // Filtramos la opción seleccionada
+											placeholder="Seleccione profesor"
+											noOptionsMessage={() => 'No hay profesores disponibles'}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							);
+						}}
+					/>
+					<FormField
+						control={form.control}
 						name="subjectId"
 						render={({ field }) => {
 							return (
@@ -261,11 +312,21 @@ export function EvaluationForm(props: EvaluationFormProps) {
 										placeholder="Nota..."
 										type="number"
 										{...field}
-										onChange={e =>
-											field.onChange(
-												e.target.value ? Number(e.target.value) : undefined
-											)
-										}
+										min={1} // Límite inferior
+										max={10} // Límite superior
+										step={1} // Incrementos de 1
+										{...field}
+										onChange={e => {
+											const value = Number(e.target.value);
+											// Validar que el valor esté dentro del rango permitido
+											if (value >= 1 && value <= 10) {
+												field.onChange(value);
+											} else if (value < 1) {
+												field.onChange(1); // Ajustar al mínimo
+											} else if (value > 10) {
+												field.onChange(10); // Ajustar al máximo
+											}
+										}}
 									/>
 								</FormControl>
 							</FormItem>

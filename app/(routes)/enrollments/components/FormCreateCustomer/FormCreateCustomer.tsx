@@ -32,14 +32,19 @@ import { Course, Plan, Student } from '@prisma/client';
 import React from 'react';
 import { EstadoIncripcion, ModalidadEstudio } from '../../utils/type';
 import moment from 'moment';
+import { StudentWithUser } from '@/app/(routes)/students/components/ListStudents/modelos';
 
 const formSchema = z.object({
-	fechaInscripcion: z.date(),
+	fechaInscripcionDesde: z.date({
+		required_error: 'La fecha  es obligatoria.',
+	}),
+	fechaInscripcionHasta: z.date().optional(),
 	courses: z.array(z.string()),
-	estudianteId: z.string(),
-	estado: z.string(),
-	modalidad: z.string(),
+	estudianteId: z.string().min(1, { message: 'El estudiante es obligatorio.' }),
+	estado: z.string().min(1, { message: 'El estado es obligatorio.' }),
+	modalidad: z.string().min(1, { message: 'La modalidad es obligatorio.' }),
 	planId: z.string(),
+	estudiantesAsociados: z.array(z.string()),
 });
 
 export function FormCreateCustomer(props: FormCreateCustomerProps) {
@@ -49,19 +54,22 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			fechaInscripcion: undefined,
+			fechaInscripcionDesde: undefined,
+			fechaInscripcionHasta: undefined,
 			courses: [],
 			estudianteId: '',
 			estado: '',
 			modalidad: '',
 			planId: '',
+			estudiantesAsociados: [],
 		},
 	});
-	const [students, setStudents] = useState<Student[]>([]); // Estado para
+	const [students, setStudents] = useState<StudentWithUser[]>([]);
+
 	useEffect(() => {
 		const fetchStudents = async () => {
 			try {
-				const response = await axios.get<Student[]>('/api/student');
+				const response = await axios.get<StudentWithUser[]>('/api/student');
 
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
@@ -72,9 +80,15 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 
 		fetchStudents();
 	}, []);
+	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
+	const studentOptions = students.map(student => ({
+		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
+		label: student.nombre + ' - ' + student.cedula, // El nombre será lo que se mostrará en la opción
+	}));
+
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
 	const [courses, setCourses] = useState<Course[]>([]); // Estado para
 	useEffect(() => {
@@ -130,6 +144,9 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 		try {
 			const formattedValues = {
 				...values,
+				estudiantesAsociados: values.estudiantesAsociados.map(
+					(estudiante: string | number) => Number(estudiante)
+				),
 				estudianteId: parseInt(values.estudianteId, 10), // Convertimos estudiantes a números
 				planId: parseInt(values.planId, 10),
 				courses: values.courses.map((course: string | number) =>
@@ -156,10 +173,38 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 					<div className="grid grid-cols-2 gap-3">
 						<FormField
 							control={form.control}
-							name="fechaInscripcion"
+							name="fechaInscripcionDesde"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Fecha Incripcion</FormLabel>
+									<FormLabel>Fecha Inscripción Desde</FormLabel>
+									<FormControl>
+										<input
+											type="date"
+											className="w-full px-3 py-2 border rounded-md"
+											value={
+												field.value
+													? moment(field.value).local().format('YYYY-MM-DD') // Formatear con moment
+													: ''
+											}
+											onChange={e =>
+												field.onChange(
+													e.target.value
+														? moment(e.target.value, 'YYYY-MM-DD').toDate()
+														: undefined
+												)
+											}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="fechaInscripcionHasta"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Fecha Inscripción Hasta</FormLabel>
 									<FormControl>
 										<input
 											type="date"
@@ -266,34 +311,6 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 						/>
 						<FormField
 							control={form.control}
-							name="planId"
-							render={({ field }) => {
-								return (
-									<FormItem>
-										<FormLabel>Plan</FormLabel>
-										<FormControl>
-											{/* El componente Select de react-select para TipoPago */}
-											<Select
-												options={planesMap} // Usamos el array de tipos de pago
-												onChange={selectedOption => {
-													field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
-												}}
-												value={planesMap.find(
-													option =>
-														option.value.toString() === field.value.toString()
-												)} // Filtramos la opción seleccionada
-												placeholder="Seleccione un plan"
-												noOptionsMessage={() => 'No hay planes disponibles'}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								);
-							}}
-						/>
-
-						<FormField
-							control={form.control}
 							name="courses"
 							render={({ field }) => {
 								return (
@@ -323,6 +340,71 @@ export function FormCreateCustomer(props: FormCreateCustomerProps) {
 								);
 							}}
 						/>
+
+						<FormField
+							control={form.control}
+							name="planId"
+							render={({ field }) => {
+								return (
+									<FormItem>
+										<FormLabel>Plan</FormLabel>
+										<FormControl>
+											{/* El componente Select de react-select para TipoPago */}
+											<Select
+												options={planesMap} // Usamos el array de tipos de pago
+												onChange={selectedOption => {
+													field.onChange(selectedOption?.value.toString()); // Actualizamos el campo con el valor seleccionado
+												}}
+												value={planesMap.find(
+													option =>
+														option.value.toString() === field.value.toString()
+												)} // Filtramos la opción seleccionada
+												placeholder="Seleccione un plan"
+												noOptionsMessage={() => 'No hay planes disponibles'}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+
+						{/* Mostrar el campo de estudiantes asociados solo si se ha seleccionado un plan */}
+						{form.watch('planId') && (
+							<FormField
+								control={form.control}
+								name="estudiantesAsociados"
+								render={({ field }) => {
+									return (
+										<FormItem>
+											<FormLabel>Estudiantes Asociados al Plan</FormLabel>
+											<FormControl>
+												{/* El componente Select de react-select */}
+												<Select
+													isMulti // Habilita la selección múltiple
+													options={studentOptions} // Lista de opciones de estudiantes
+													onChange={selectedOptions => {
+														// `selectedOptions` es un array con las opciones seleccionadas
+														const selectedIds = selectedOptions.map(
+															option => option.value
+														);
+														field.onChange(selectedIds); // Guarda los IDs seleccionados
+													}}
+													value={studentOptions.filter(option =>
+														field.value?.includes(option.value)
+													)} // Filtra las opciones seleccionadas
+													placeholder="Seleccione estudiantes"
+													noOptionsMessage={() =>
+														'No hay estudiantes disponibles'
+													} // Mensaje cuando no hay opciones
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									);
+								}}
+							/>
+						)}
 					</div>
 					<Button type="submit" disabled={!isValid}>
 						Enviar

@@ -25,6 +25,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { EstadoPago, TipoPago } from '../../utils/enum';
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -66,7 +67,18 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div className="p-4 mt-4 rounded-lg shadow-md bg-background">
-			<div className="flex items-center mb-2">
+			<div className="flex items-center mb-2 space-x-4">
+				<Input
+					name="fechaDesde"
+					placeholder="Fecha desde..."
+					value={
+						(table.getColumn('fechaPagoMes')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event => {
+						const fromDate = event.target.value;
+						table.getColumn('fechaPagoMes')?.setFilterValue(fromDate);
+					}}
+				/>
 				<Input
 					placeholder="Filtrar por estudiante..."
 					value={(table.getColumn('pagador')?.getFilterValue() as string) ?? ''}
@@ -74,24 +86,84 @@ export function DataTable<TData, TValue>({
 						table.getColumn('pagador')?.setFilterValue(event.target.value)
 					}
 				/>
+				<Input
+					placeholder="Filtrar por estado..."
+					value={
+						(table.getColumn('estadoPago')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('estadoPago')?.setFilterValue(event.target.value)
+					}
+				/>
+				<select
+					name="estadoPago"
+					value={
+						(table.getColumn('estadoPago')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('estadoPago')?.setFilterValue(event.target.value)
+					}
+					className="border rounded p-2"
+				>
+					<option value="">Todos</option>
+					{Object.values(EstadoPago).map(estado => (
+						<option key={estado} value={estado}>
+							{estado}
+						</option>
+					))}
+				</select>
+				<select
+					name="tipoPago"
+					value={
+						(table.getColumn('tipoPago')?.getFilterValue() as string) ?? ''
+					}
+					onChange={event =>
+						table.getColumn('tipoPago')?.setFilterValue(event.target.value)
+					}
+					className="border rounded p-2"
+				>
+					<option value="">Todos</option>
+					{Object.values(TipoPago).map(tipo => (
+						<option key={tipo} value={tipo}>
+							{tipo}
+						</option>
+					))}
+				</select>
 			</div>
 			<div className="border rounded-md">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map(header => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-												  )}
-										</TableHead>
-									);
-								})}
+								{headerGroup.headers.map(header => (
+									<TableHead key={header.id}>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<div
+												onClick={header.column.getToggleSortingHandler()}
+												className="cursor-pointer flex items-center"
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext()
+												)}
+												{header.column.getIsSorted() === 'asc' && (
+													<span className="ml-2">⬆️</span> // Icono para orden ascendente
+												)}
+												{header.column.getIsSorted() === 'desc' && (
+													<span className="ml-2">⬇️</span> // Icono para orden descendente
+												)}
+												{header.column.getIsSorted() === false && (
+													<span className="ml-2">↕️</span> // Icono por defecto (ordenable)
+												)}
+											</div>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)
+										)}
+									</TableHead>
+								))}
 							</TableRow>
 						))}
 					</TableHeader>

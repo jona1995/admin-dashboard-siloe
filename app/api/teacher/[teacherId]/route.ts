@@ -7,20 +7,26 @@ export async function PATCH(
 	{ params }: { params: { teacherId: string } }
 ) {
 	try {
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const { teacherId } = params;
 		const values = await req.json();
 
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
-
+		console.log(values);
 		const teacher = await db.teacher.update({
 			where: {
 				id: parseInt(teacherId, 10),
 			},
 			data: {
 				...values,
+				updatedByName: user?.firstName
+					? user?.firstName + ' ' + user.lastName
+					: '',
+				subjects: {
+					set: values.subjects.map((id: number) => ({ id })), // Conecta las materias por ID
+				},
 			},
 		});
 

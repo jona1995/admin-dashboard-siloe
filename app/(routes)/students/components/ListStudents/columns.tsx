@@ -1,8 +1,5 @@
 'use client';
-import { ArrowUpDown, MoreHorizontal, Pencil } from 'lucide-react';
-
-import { Student } from '@prisma/client';
-
+import { MoreHorizontal, Pencil, EyeIcon } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
@@ -14,8 +11,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import Link from 'next/link';
-
-export const columns: ColumnDef<Student>[] = [
+import { StudentWithUser } from './modelos';
+export const columns: ColumnDef<StudentWithUser>[] = [
 	{
 		accessorKey: 'nombre',
 		header: 'Nombres',
@@ -45,8 +42,20 @@ export const columns: ColumnDef<Student>[] = [
 		header: 'Localidad Iglesia',
 	},
 	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
+
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
+	},
+	{
 		id: 'actions',
 		header: 'Actions',
+		enableSorting: false,
 		cell: ({ row }) => {
 			const { id } = row.original;
 			return (
@@ -62,6 +71,12 @@ export const columns: ColumnDef<Student>[] = [
 							<DropdownMenuItem>
 								<Pencil className="w-4 h-4 mr-2" />
 								Editar
+							</DropdownMenuItem>
+						</Link>
+						<Link href={`/students/detail/${id}`}>
+							<DropdownMenuItem>
+								<EyeIcon className="w-4 h-4 mr-2" />
+								Ver
 							</DropdownMenuItem>
 						</Link>
 					</DropdownMenuContent>

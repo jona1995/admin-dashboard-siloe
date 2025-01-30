@@ -41,7 +41,7 @@ export function PaymentForm(props: PaymentFormProps) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			fechaPago: payment.fechaPago,
+			fechaPagoMes: payment.fechaPagoMes,
 			monto: payment.monto.toString(),
 			estadoPago: payment.estadoPago,
 			tipoPago: payment.tipoPago,
@@ -54,7 +54,6 @@ export function PaymentForm(props: PaymentFormProps) {
 		},
 	});
 	const [students, setStudents] = useState<Student[]>([]);
-	const [searchQuery, setSearchQuery] = React.useState('');
 	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
 	const studentOptions = students.map(student => ({
 		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
@@ -72,7 +71,7 @@ export function PaymentForm(props: PaymentFormProps) {
 
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre, // Capitalizamos el tipo
+		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
 	useEffect(() => {
 		const fetchSubjects = async () => {
@@ -104,7 +103,7 @@ export function PaymentForm(props: PaymentFormProps) {
 	}, []);
 	const planesMap = planes.map(plan => ({
 		value: plan.id,
-		label: plan.nombre, // Capitalizamos el tipo
+		label: plan.nombre + ' - $' + plan.precioFinal, // Capitalizamos el tipo
 	}));
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
@@ -136,10 +135,10 @@ export function PaymentForm(props: PaymentFormProps) {
 				<div className="grid grid-cols-2 gap-3">
 					<FormField
 						control={form.control}
-						name="fechaPago"
+						name="fechaPagoMes"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Fecha Pago</FormLabel>
+								<FormLabel>Fecha Pago Mes</FormLabel>
 								<FormControl>
 									<input
 										type="date"
@@ -169,7 +168,18 @@ export function PaymentForm(props: PaymentFormProps) {
 							<FormItem>
 								<FormLabel>Monto Pago</FormLabel>
 								<FormControl>
-									<Input placeholder="Monto Pago..." type="number" {...field} />
+									<Input
+										placeholder="Monto Pago..."
+										type="number"
+										{...field}
+										onChange={e => {
+											const newValue = e.target.value
+												? Number(e.target.value)
+												: 0;
+											// Verificar si el valor es negativo y no permitirlo
+											field.onChange(newValue >= 0 ? newValue : 0);
+										}}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -323,11 +333,11 @@ export function PaymentForm(props: PaymentFormProps) {
 							<FormItem>
 								<FormLabel>Comentario</FormLabel>
 								<FormControl>
-									<Input
+									<textarea
 										placeholder="Comentario..."
-										type="text"
 										{...field}
 										value={field.value ?? ''}
+										className="resize-none p-2 border rounded-md w-full h-32" // Estilos personalizados
 									/>
 								</FormControl>
 								<FormMessage />

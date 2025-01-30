@@ -1,6 +1,6 @@
 import { Sidebar } from '@/components/Sidebar';
 import GlobalLoader from './globalLoader/globalLoader';
-import { Navbar } from '@/components/Navbar';
+import { Navbar } from '@/components/Navbar/NavBar';
 
 export default function LayoutDashboard({
 	children,

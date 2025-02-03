@@ -1,6 +1,6 @@
 import { Sidebar } from '@/components/Sidebar';
 import GlobalLoader from './globalLoader/globalLoader';
-import { Navbar } from '@/components/Navbar/Navbar';
+// import { Navbar } from '@/components/Navbar/Navbar';
 
 export default function LayoutDashboard({
 	children,
@@ -16,7 +16,7 @@ export default function LayoutDashboard({
 
 			{/* Main Content */}
 			<div className="w-full xl:pl-80 h-full overflow-auto">
-				<Navbar />
+				{/* <Navbar /> */}
 				<div className="p-6 bg-[#fafbfc] dark:bg-secondary min-h-full">
 					{/* Componente GlobalLoader que envolverá todo */}
 					<GlobalLoader>{children}</GlobalLoader>

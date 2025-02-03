@@ -3,3 +3,5 @@
   environment = { NODE_ENV = "production" }
   publish = "public"
   clear_cache = true
+[build.environment]
+  NODE_VERSION = "18"

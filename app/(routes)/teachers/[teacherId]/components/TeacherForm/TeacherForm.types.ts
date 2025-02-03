@@ -1,8 +1,5 @@
 import { TeacherWithUser } from '../../../components/ListTeacher/modelos';
 
-// export type TeacherFormProps = {
-// 	teacher: Teacher;
-// };
 type TeacherWithSubjects = TeacherWithUser & {
 	subjects: {
 		id: number;

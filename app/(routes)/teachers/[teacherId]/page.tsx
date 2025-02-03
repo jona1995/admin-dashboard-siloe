@@ -19,7 +19,7 @@ export default async function TeacherIdPage({
 		where: {
 			id: parseInt(params.teacherId, 10),
 		},
-		include: { subjects: true },
+		include: { user: true, subjects: true },
 	});
 
 	if (!teacher) {

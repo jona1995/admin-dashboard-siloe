@@ -20,18 +20,37 @@ export default async function PaymentIdPage({
 			id: parseInt(params.paymentId, 10),
 		},
 		include: {
-			beneficiarios: true, // Incluye los beneficiarios
+			beneficiarios: {
+				select: {
+					id: true,
+					user: {
+						select: {
+							nombre: true, // Obtener el nombre del user del beneficiario
+						},
+					},
+				},
+			},
 		},
 	});
 
 	if (!payment) {
 		return redirect('/');
 	}
+	// Mapea los beneficiarios para aplanar la estructura
+	const formattedBeneficiarios = payment.beneficiarios.map(beneficiario => ({
+		id: beneficiario.id,
+		nombre: beneficiario.user.nombre, // Mueve 'nombre' al nivel superior
+	}));
 
+	// Crea un nuevo objeto 'payment' con los beneficiarios formateados
+	const paymentWithFormattedBeneficiarios = {
+		...payment,
+		beneficiarios: formattedBeneficiarios,
+	};
 	return (
 		<div>
 			<Header />
-			<PaymentInformation payment={payment} />
+			<PaymentInformation payment={paymentWithFormattedBeneficiarios} />
 			<PaymentFooter paymentId={payment.id} />
 		</div>
 	);

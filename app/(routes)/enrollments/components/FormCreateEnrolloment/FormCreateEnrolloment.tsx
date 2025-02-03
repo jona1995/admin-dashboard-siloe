@@ -101,12 +101,12 @@ export function FormCreateEnrolloment(props: FormCreateEnrollomentProps) {
 	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
 	const studentOptions = students.map(student => ({
 		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
-		label: student.nombre + ' - ' + student.cedula, // El nombre será lo que se mostrará en la opción
+		label: student.user.nombre + ' - ' + student.user.cedula, // El nombre será lo que se mostrará en la opción
 	}));
 
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
+		label: student.user.nombre + ' - ' + student.user.cedula, // Capitalizamos el tipo
 	}));
 	const [courses, setCourses] = useState<Course[]>([]); // Estado para
 	useEffect(() => {

@@ -26,10 +26,11 @@ export default async function DetailIdPage({
 					courses: true, // Obtener los cursos
 				},
 			},
+			user: true, // Incluir la relación de Usuario con el Estudiante
 			evaluations: true,
 			paymentsMade: true,
 			paymentsReceived: true,
-			Plan: true,
+			plan: true,
 		},
 	});
 
@@ -37,11 +38,18 @@ export default async function DetailIdPage({
 		return redirect('/');
 	}
 	console.log(student);
-
+	// Transformar los cursos a la estructura esperada
+	const enrollmentsWithCourses = student.enrollments.map(enrollment => ({
+		...enrollment,
+		courses: enrollment.courses.map(course => ({
+			name: course.nombre, // Mapear 'nombre' a 'name'
+			description: course.descripcion || '', // Mapear 'descripcion' a 'description'
+		})),
+	}));
 	return (
 		<div>
 			<HeaderDetail />
-			<StudentInformationDetail student={student} />
+			{/* <StudentInformationDetail student={student} /> */}
 		</div>
 	);
 }

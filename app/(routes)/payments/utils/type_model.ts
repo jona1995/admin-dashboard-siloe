@@ -6,21 +6,27 @@ import {
 	Student,
 	TipoPago,
 } from '@prisma/client';
+import { StudentWithUser } from '../../students/components/ListStudents/modelos';
 
 export type Payment_model = {
 	id: number;
 	monto: number;
 	fechaPagoMes: Date;
-	fechaPagoRecibo: Date;
+	fechaPagoRecibo: Date | null;
 	estadoPago: EstadoPago;
 	tipoPago: TipoPago;
-	pagadorId: number;
-	comentario: string;
+	pagadorId: number | null;
+	beneficiadoId: number | null;
+	comentario: string | null;
 	createdAt: Date;
 	updatedAt: Date;
-	pagador: Student; // Este es el objeto relacionado del estudiante
-	beneficiarios: Student[]; // Este es el objeto relacionado del estudiante
-	plan: Plan; // Este es el objeto relacionado de la materia
+	pagador?: StudentWithUser | null; // Este es el objeto relacionado del estudiante
+	beneficiarios: StudentWithUser[]; // Este es el objeto relacionado del estudiante
+	plan?: Plan | null; // Este es el objeto relacionado de la materia
+	createdBy: string;
+	createdByName: string;
+	updatedBy: string | null;
+	updatedByName: string | null;
 	// Enrollment: Enrollment[];
 	// FinancialTransaction: FinancialTransaction[];
 };

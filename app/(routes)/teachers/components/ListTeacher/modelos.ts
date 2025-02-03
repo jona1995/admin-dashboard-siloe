@@ -1,18 +1,19 @@
 import { UserState } from '@prisma/client';
 
 export type TeacherWithUser = {
-	id: number;
-	nombre: string;
-	apellido: string;
-	cedula: string;
-	email: string;
-	telefono: string;
-	iglesia: string;
-	localidadIglesia: string;
-	state: UserState;
-	updatedAt: Date;
-	createdAt: Date;
-	createdByName: string;
-	updatedByName: string;
-	// Otros campos adicionales que quieras incluir
+	user: {
+		id: number;
+		clerkId: string | null;
+		nombre: string;
+		apellido: string;
+		cedula: string;
+		email: string;
+		telefono: string;
+		iglesia: string;
+		localidadIglesia: string;
+		state: string;
+		createdAt: Date;
+		updatedAt: Date;
+	};
+	subjects: { id: number; nombre: string }[]; // Agrega las materias (subjects)
 };

@@ -65,10 +65,10 @@ model Student {
   paymentsReceived  Payment[]    @relation("PaymentsReceived")
   evaluations       Evaluation[]
   absences          Absence[]
-  Grade             Grade[]
-  Plan              Plan[]
+  grade             Grade[]
+  plan              Plan[]
   studentAssociates Enrollment[] @relation("StudentAssociates")
-  Payment           Payment[]
+  payment           Payment[]
   createdBy         String // Usuario autenticado
   createdByName     String // Guarda el nombre en la base de datos
   updatedBy         String?
@@ -98,7 +98,7 @@ model Course {
   subjects      Subject[]    @relation("CourseSubjects") // Relación con materias
   Grade         Grade[]
   enrollments   Enrollment[] @relation("EnrollmentCourses")
-  PlanItem      PlanItem[]
+  planItem      PlanItem[]
   createdBy     String // Usuario autenticado
   createdByName String // Guarda el nombre en la base de datos
   updatedBy     String?
@@ -119,7 +119,7 @@ model Subject {
   absences      Absence[] // Relación con ausencias asociadas a esta materia
   course        Course[]     @relation("CourseSubjects") // Relación inversa con cursos
   teachers      Teacher[]    @relation("TeacherSubjects") // Relación directa con profesores
-  Absence       Absence[]    @relation("SubjectAbsence")
+  absence       Absence[]    @relation("SubjectAbsence")
   createdBy     String // Usuario autenticado
   createdByName String // Guarda el nombre en la base de datos
   updatedBy     String?

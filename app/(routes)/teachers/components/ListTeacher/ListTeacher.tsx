@@ -19,6 +19,7 @@ export async function Teachers() {
 			createdAt: 'desc',
 		},
 		include: {
+			user: true,
 			subjects: true,
 		},
 	});

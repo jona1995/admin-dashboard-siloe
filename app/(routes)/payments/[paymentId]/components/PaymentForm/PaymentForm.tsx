@@ -33,6 +33,7 @@ import { toast } from '@/components/ui/use-toast';
 import { EstadoPago, Plan, Student, TipoPago } from '@prisma/client';
 import React from 'react';
 import moment from 'moment';
+import { StudentWithUser } from '@/app/(routes)/students/components/ListStudents/modelos';
 
 export function PaymentForm(props: PaymentFormProps) {
 	const { payment } = props;
@@ -45,19 +46,19 @@ export function PaymentForm(props: PaymentFormProps) {
 			monto: payment.monto.toString(),
 			estadoPago: payment.estadoPago,
 			tipoPago: payment.tipoPago,
-			planId: payment.planId.toString(),
+			planId: payment.planId ? payment.planId.toString() : undefined,
 			beneficiarios: payment.beneficiarios.map(beneficiario =>
 				beneficiario.id.toString()
 			),
-			pagadorId: payment.pagadorId.toString(),
+			pagadorId: payment.pagadorId ? payment.pagadorId.toString() : undefined,
 			comentario: payment.comentario,
 		},
 	});
-	const [students, setStudents] = useState<Student[]>([]);
+	const [students, setStudents] = useState<StudentWithUser[]>([]);
 	// Prepara los datos de los estudiantes para que `react-select` los pueda manejar
 	const studentOptions = students.map(student => ({
 		value: student.id.toString(), // El ID debe ser el valor que se pasará al formulario
-		label: student.nombre, // El nombre será lo que se mostrará en la opción
+		label: student.user.nombre, // El nombre será lo que se mostrará en la opción
 	}));
 	const estados = Object.values(EstadoPago).map(estado => ({
 		value: estado,
@@ -71,12 +72,12 @@ export function PaymentForm(props: PaymentFormProps) {
 
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
+		label: student.user.nombre + ' - ' + student.user.cedula, // Capitalizamos el tipo
 	}));
 	useEffect(() => {
 		const fetchSubjects = async () => {
 			try {
-				const response = await axios.get<Student[]>('/api/student');
+				const response = await axios.get<StudentWithUser[]>('/api/student');
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
 			} catch (error) {

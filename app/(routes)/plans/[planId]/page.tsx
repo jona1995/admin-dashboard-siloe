@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { Header } from './components/Header';
 import { PlanInformation } from './components/PlanInformation';
 import { PlanFooter } from './components/PlanFooter';
+import { Plan } from '@prisma/client';
 
 export default async function PlanIdPage({
 	params,
@@ -31,11 +32,19 @@ export default async function PlanIdPage({
 	if (!plan) {
 		return redirect('/');
 	}
-
+	// Transforma los items a la estructura esperada
+	const planWithItems = {
+		...plan,
+		items: plan.items.map(item => ({
+			cursoId: item.curso.id.toString(), // Asegúrate de extraer el cursoId correctamente
+			cantidad: item.cantidad, // Asegúrate de que 'cantidad' exista
+			descuento: item.descuento, // Asegúrate de que 'descuento' exista
+		})),
+	};
 	return (
 		<div>
 			<Header />
-			<PlanInformation plan={plan} />
+			<PlanInformation plan={planWithItems} />
 			<PlanFooter planId={plan.id} />
 		</div>
 	);

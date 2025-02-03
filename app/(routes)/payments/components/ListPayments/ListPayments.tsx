@@ -19,12 +19,23 @@ export async function Payments() {
 			createdAt: 'desc',
 		},
 		include: {
-			pagador: true,
-			beneficiarios: true,
+			pagador: {
+				include: {
+					user: true, // Incluir datos del usuario (nombre, etc.)
+				},
+			},
+
+			beneficiarios: {
+				include: {
+					user: true, // Incluir la relación con el usuario
+				},
+			},
 			// Enrollment: true,
 			// FinancialTransaction: true,
 		},
 	});
 	console.log(payments);
+	// Aquí accedes a la propiedad 'user' del 'pagador' para obtener el nombre
+
 	return <DataTable columns={columns} data={payments} />;
 }

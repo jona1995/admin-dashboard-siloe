@@ -125,13 +125,16 @@ export const columns: ColumnDef<Payment_model>[] = [
 	{
 		accessorKey: 'pagador',
 		header: 'Pagador',
-		cell: ({ row }) => row.original.pagador.nombre,
+		cell: ({ row }) =>
+			row.original.pagador ? row.original.pagador.user.nombre : '',
 		// Filtro personalizado para buscar por el nombre del estudiante
 		filterFn: (row, columnId, value) => {
 			// Si el nombre del estudiante contiene el valor de búsqueda (insensible a mayúsculas/minúsculas)
-			return row.original.pagador.nombre
-				.toLowerCase()
-				.includes(value.toLowerCase());
+			return row.original.pagador
+				? row.original.pagador.user.nombre
+						.toLowerCase()
+						.includes(value.toLowerCase())
+				: false;
 		},
 	},
 	{
@@ -139,7 +142,7 @@ export const columns: ColumnDef<Payment_model>[] = [
 		header: 'Beneficiarios',
 		cell: ({ row }) =>
 			row.original.beneficiarios
-				.map(beneficiario => beneficiario.nombre)
+				.map(beneficiario => beneficiario.user.nombre)
 				.join(', '),
 	},
 	{

@@ -85,7 +85,7 @@ export function EvaluationForm(props: EvaluationFormProps) {
 	}, []);
 	const studentsMap = students.map(student => ({
 		value: student.id,
-		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
+		label: student.user.nombre + ' - ' + student.user.cedula, // Capitalizamos el tipo
 	}));
 
 	const [teachers, setTeachers] = useState<TeacherWithUser[]>([]); // Estado para
@@ -118,8 +118,8 @@ export function EvaluationForm(props: EvaluationFormProps) {
 		fetchTeachers();
 	}, []);
 	const teachersMap = teachers.map(teacher => ({
-		value: teacher.id,
-		label: teacher.nombre + ' - ' + teacher.cedula, // Capitalizamos el tipo
+		value: teacher.user.id,
+		label: teacher.user.nombre + ' - ' + teacher.user.cedula, // Capitalizamos el tipo
 	}));
 
 	const tipos = Object.values(Tipo).map(tipo => ({

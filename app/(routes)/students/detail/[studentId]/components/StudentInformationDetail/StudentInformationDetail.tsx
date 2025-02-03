@@ -67,10 +67,11 @@ export function StudentInformationDetail(props: StudentInformationDetailProps) {
 				<section className="py-4">
 					<h2 className="text-xl font-bold mb-2">Información del Estudiante</h2>
 					<p>
-						<strong>Nombre:</strong> {student.nombre} {student.apellido}
+						<strong>Nombre:</strong> {student.user.nombre}{' '}
+						{student.user.apellido}
 					</p>
 					<p>
-						<strong>Email:</strong> {student.email}
+						<strong>Email:</strong> {student.user.email}
 					</p>
 				</section>
 			)}

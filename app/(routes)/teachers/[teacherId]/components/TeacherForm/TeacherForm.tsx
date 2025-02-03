@@ -33,13 +33,13 @@ export function TeacherForm(props: TeacherFormProps) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			nombre: teacher.nombre,
-			apellido: teacher.apellido,
-			cedula: teacher.cedula,
-			telefono: teacher.telefono,
-			email: teacher.email,
-			iglesia: teacher.iglesia,
-			localidadIglesia: teacher.localidadIglesia,
+			nombre: teacher.user.nombre,
+			apellido: teacher.user.apellido,
+			cedula: teacher.user.cedula,
+			telefono: teacher.user.telefono,
+			email: teacher.user.email,
+			iglesia: teacher.user.iglesia,
+			localidadIglesia: teacher.user.localidadIglesia,
 			subjects: teacher.subjects.map(subject => subject.id.toString()),
 		},
 	});
@@ -84,7 +84,7 @@ export function TeacherForm(props: TeacherFormProps) {
 				), // Asegúrate de que todos los valores sean números
 			};
 			const response = await axios.patch(
-				`/api/teacher/${teacher.id}`,
+				`/api/teacher/${teacher.user.id}`,
 				formattedValues
 			);
 			if (response.status === 200) {

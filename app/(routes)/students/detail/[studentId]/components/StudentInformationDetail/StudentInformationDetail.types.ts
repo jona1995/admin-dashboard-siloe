@@ -1,10 +1,11 @@
-import { Enrollment, Evaluation, Payment, Plan, Student } from '@prisma/client';
+import { StudentWithUser } from '@/app/(routes)/students/components/ListStudents/modelos';
+import { Enrollment, Evaluation, Payment, Plan } from '@prisma/client';
 
 // export type StudentInformationDetailProps = {
 // 	student: Student;
 // };
 
-type StudentInformation = Student & {
+type StudentInformation = StudentWithUser & {
 	enrollments: (Enrollment & {
 		courses: { name: string; description: string }[]; // Aquí defines los cursos asociados a la inscripción
 	})[]; // Inscripciones y cursos asociados
@@ -16,6 +17,8 @@ type StudentInformation = Student & {
 	paymentsReceived: Payment[]; // Pagos recibidos
 
 	plan: Plan | null; // Plan del estudiante, puede ser null si no tiene
+
+	planFijoId: number | null; // Plan del estudiante, puede ser null si no tiene
 };
 
 export type StudentInformationDetailProps = {

@@ -19,6 +19,9 @@ export default async function StudentIdPage({
 		where: {
 			id: parseInt(params.studentId, 10),
 		},
+		include: {
+			user: true, // Incluye la relación 'user' asociada al estudiante
+		},
 	});
 
 	if (!student) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CourseFooterProps } from './CourseFooter.types';
@@ -28,10 +28,20 @@ export function CourseFooter(props: CourseFooterProps) {
 			setIsModalOpen(false); // Cerrar el modal después de la eliminación
 		} catch (error) {
 			setIsLoading(false); // Desactivar el spinner si hay error
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 
@@ -48,10 +58,20 @@ export function CourseFooter(props: CourseFooterProps) {
 			router.push('/courses');
 			router.refresh();
 		} catch (error) {
-			toast({
-				title: 'Error al eliminar el curso',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		} finally {
 			setIsLoading(false); // Desactivar el spinner después de la operación
 		}

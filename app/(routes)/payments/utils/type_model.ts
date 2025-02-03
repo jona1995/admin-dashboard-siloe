@@ -11,6 +11,7 @@ export type Payment_model = {
 	id: number;
 	monto: number;
 	fechaPagoMes: Date;
+	fechaPagoRecibo: Date;
 	estadoPago: EstadoPago;
 	tipoPago: TipoPago;
 	pagadorId: number;

@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Select from 'react-select'; // Importa react-select
@@ -32,6 +32,8 @@ import { toast } from '@/components/ui/use-toast';
 import { Student, Subject, Teacher } from '@prisma/client';
 import { Tipo } from '../../../utils/enum';
 import moment from 'moment';
+import { StudentWithUser } from '@/app/(routes)/students/components/ListStudents/modelos';
+import { TeacherWithUser } from '@/app/(routes)/teachers/components/ListTeacher/modelos';
 
 export function EvaluationForm(props: EvaluationFormProps) {
 	const { evaluation } = props;
@@ -52,16 +54,30 @@ export function EvaluationForm(props: EvaluationFormProps) {
 		},
 	});
 
-	const [students, setStudents] = useState<Student[]>([]); // Estado para
+	const [students, setStudents] = useState<StudentWithUser[]>([]); // Estado para
 	useEffect(() => {
 		const fetchStudents = async () => {
 			try {
-				const response = await axios.get<Student[]>('/api/student');
+				const response = await axios.get<StudentWithUser[]>('/api/student');
 
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
 			} catch (error) {
-				console.error('Error fetching students:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -72,16 +88,30 @@ export function EvaluationForm(props: EvaluationFormProps) {
 		label: student.nombre + ' - ' + student.cedula, // Capitalizamos el tipo
 	}));
 
-	const [teachers, setTeachers] = useState<Teacher[]>([]); // Estado para
+	const [teachers, setTeachers] = useState<TeacherWithUser[]>([]); // Estado para
 	useEffect(() => {
 		const fetchTeachers = async () => {
 			try {
-				const response = await axios.get<Teacher[]>('/api/teacher');
+				const response = await axios.get<TeacherWithUser[]>('/api/teacher');
 
 				console.log(response.data); // Log the response data
 				setTeachers(response.data);
 			} catch (error) {
-				console.error('Error fetching teachears:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -105,7 +135,21 @@ export function EvaluationForm(props: EvaluationFormProps) {
 				console.log(response.data); // Log the response data
 				setSubjects(response.data);
 			} catch (error) {
-				console.error('Error fetching subjects:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -123,16 +167,39 @@ export function EvaluationForm(props: EvaluationFormProps) {
 				estudianteId: parseInt(values.estudianteId, 10), // Convertimos estudiantes a números
 				teacherId: parseInt(values.teacherId, 10),
 			};
-			await axios.patch(`/api/evaluation/${evaluation.id}`, formattedValues);
-			toast({
-				title: 'Evaluacion actualizada!',
-			});
-			router.refresh();
+			const response = await axios.patch(
+				`/api/evaluation/${evaluation.id}`,
+				formattedValues
+			);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Evaluacion realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el evaluacion');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

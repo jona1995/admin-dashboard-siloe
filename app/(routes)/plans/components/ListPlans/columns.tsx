@@ -65,6 +65,17 @@ export const columns: ColumnDef<Plans_model>[] = [
 		header: 'Descripcion',
 	},
 	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
+
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
+	},
+	{
 		id: 'actions',
 		header: 'Actions',
 		enableSorting: false,

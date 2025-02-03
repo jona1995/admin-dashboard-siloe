@@ -75,12 +75,14 @@ export function DataTable<TData, TValue>({
 					placeholder="Fecha desde..."
 					value={
 						(table
-							.getColumn('fechaInscripcionDesde')
+							.getColumn('fechaInscripcionCursoDesde')
 							?.getFilterValue() as string) ?? ''
 					}
 					onChange={event => {
 						const fromDate = event.target.value;
-						table.getColumn('fechaInscripcionDesde')?.setFilterValue(fromDate);
+						table
+							.getColumn('fechaInscripcionCursoDesde')
+							?.setFilterValue(fromDate);
 					}}
 				/>
 				<Input
@@ -88,12 +90,14 @@ export function DataTable<TData, TValue>({
 					placeholder="Fecha Hasta..."
 					value={
 						(table
-							.getColumn('fechaInscripcionHasta')
+							.getColumn('fechaInscripcionCursoHasta')
 							?.getFilterValue() as string) ?? ''
 					}
 					onChange={event => {
 						const fromDate = event.target.value;
-						table.getColumn('fechaInscripcionHasta')?.setFilterValue(fromDate);
+						table
+							.getColumn('fechaInscripcionCursoHasta')
+							?.setFilterValue(fromDate);
 					}}
 				/>
 				<Input

@@ -24,7 +24,17 @@ export const columns: ColumnDef<Subject>[] = [
 		accessorKey: 'descripcion',
 		header: 'Descripcion',
 	},
+	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
 
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
+	},
 	{
 		id: 'actions',
 		header: 'Actions',

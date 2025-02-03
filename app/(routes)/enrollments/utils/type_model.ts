@@ -10,15 +10,20 @@ import {
 export type Enrollment = {
 	id: number;
 	estudianteId: number;
-	fechaInscripcionDesde: Date;
-	fechaInscripcionHasta: Date;
+	fechaInscripcion: Date;
+	fechaInscripcionCursoDesde: Date;
+	fechaInscripcionCursoHasta: Date | null;
 	estado: EstadoIncripcion;
-	planId: number;
+	planId: number | null;
 	modalidad: ModalidadEstudio;
 	createdAt: Date;
 	updatedAt: Date;
+	createdBy: string;
+	createdByName: string;
+	updatedBy: string | null;
+	updatedByName: string | null;
 	student: Student; // Este es el objeto relacionado del estudiante
-	plan: Plan; // Este es el objeto relacionado de la materia
+	plan: Plan | null; // Este es el objeto relacionado de la materia
 	courses: Course[];
 	user: User;
 };

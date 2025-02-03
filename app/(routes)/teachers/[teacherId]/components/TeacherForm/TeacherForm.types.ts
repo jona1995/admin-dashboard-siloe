@@ -1,9 +1,9 @@
-import { Teacher } from '@prisma/client';
+import { TeacherWithUser } from '../../../components/ListTeacher/modelos';
 
 // export type TeacherFormProps = {
 // 	teacher: Teacher;
 // };
-type TeacherWithSubjects = Teacher & {
+type TeacherWithSubjects = TeacherWithUser & {
 	subjects: {
 		id: number;
 		nombre: string;

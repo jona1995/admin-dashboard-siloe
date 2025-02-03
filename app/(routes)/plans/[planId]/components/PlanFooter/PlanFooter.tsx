@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Trash } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -40,10 +40,20 @@ export function PlanFooter(props: PlanFooterProps) {
 			router.push('/plans');
 			router.refresh();
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

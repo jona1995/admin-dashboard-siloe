@@ -1,7 +1,9 @@
+import { StudentWithUser } from '../../students/components/ListStudents/modelos';
+
 export type GradeDTO = {
 	id: number;
 	promedio: number;
-	studentName: string;
+	studentName: StudentWithUser;
 	subjectName: string;
 	courseName: string;
 };

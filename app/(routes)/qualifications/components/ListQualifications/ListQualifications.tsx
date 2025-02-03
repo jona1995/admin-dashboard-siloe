@@ -14,10 +14,14 @@ export async function Qualifications() {
 	if (!userId) {
 		return redirect('/');
 	}
-	const grades: GradeDTO[] = (
+	(
 		await db.grade.findMany({
 			include: {
-				student: { select: { nombre: true } },
+				student: {
+					include: {
+						user: true, // Incluir la relación de Usuario con el Estudiante
+					},
+				},
 				subject: { select: { descripcion: true } },
 				course: { select: { descripcion: true } },
 			},
@@ -28,7 +32,7 @@ export async function Qualifications() {
 	).map(grade => ({
 		id: grade.id,
 		promedio: grade.promedio,
-		studentName: grade.student.nombre,
+		studentName: grade.student.user.nombre,
 		subjectName: grade.subject.descripcion,
 		courseName: grade.course.descripcion,
 	}));
@@ -46,7 +50,9 @@ export async function Qualifications() {
 		averages.map(async average => {
 			const student = await db.student.findUnique({
 				where: { id: average.estudianteId },
-				select: { nombre: true },
+				include: {
+					user: true, // Incluir la relación de Usuario con el Estudiante
+				},
 			});
 
 			const subject = await db.subject.findUnique({
@@ -85,7 +91,7 @@ export async function Qualifications() {
 			}
 
 			return {
-				studentName: student?.nombre || 'Sin nombre',
+				studentName: student?.user?.nombre || 'Sin nombre',
 				subjectName: subject?.nombre || 'Sin materia',
 				courseName: subject?.course?.[0]?.nombre || 'Sin curso',
 				promedio: average._avg.nota?.toFixed(2) || '0.00',

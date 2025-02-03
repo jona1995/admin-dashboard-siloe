@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -39,22 +39,42 @@ export function SubjectForm(props: SubjectFormProps) {
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			nombre: subject.nombre,
-			descripcion: subject.descripcion,
+			descripcion: subject.descripcion || undefined,
 		},
 	});
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		try {
-			await axios.patch(`/api/subject/${subject.id}`, values);
-			toast({
-				title: 'Materia actualizada!',
-			});
-			router.refresh();
+			const response = await axios.patch(`/api/subject/${subject.id}`, values);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Materia realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el materia');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

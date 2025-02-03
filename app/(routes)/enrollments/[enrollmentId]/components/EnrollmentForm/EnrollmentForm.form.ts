@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 export const formSchema = z.object({
-	fechaInscripcionDesde: z.date({
+	fechaInscripcionCursoDesde: z.date({
 		required_error: 'La fecha  es obligatoria.',
 	}),
-	fechaInscripcionHasta: z.date(),
+	fechaInscripcionCursoHasta: z.date(),
 	courses: z.array(z.string()),
 	estudianteId: z.string().min(1, { message: 'El estudiante es obligatorio.' }),
 	estado: z.string().min(1, { message: 'El estado es obligatorio.' }),

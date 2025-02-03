@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs';
 import { db } from '@/lib/db'; // Asegúrate de importar correctamente tu instancia de Prisma
 import { UserState, UserType } from '@prisma/client';
+import { AxiosError } from 'axios';
 export async function POST(req: Request) {
 	try {
 		// Obtener el ID del usuario autenticado
-		const { userId } = auth();
+		const { userId, user } = auth();
 		const data = await req.json();
 		// Verificar si el usuario está autenticado
 		if (!userId) {
@@ -43,10 +44,44 @@ export async function POST(req: Request) {
 			},
 		});
 
-		// Responder con el estudiante creado
-		return NextResponse.json(student);
+		// Si todo va bien, devolver una respuesta exitosa
+		return NextResponse.json({
+			success: true,
+			message: 'Usuario procesado exitosamente',
+			data: student,
+			status: 200,
+		});
 	} catch (error) {
-		console.log('[STUDENT]', error);
-		return new NextResponse('Internal Error', { status: 500 });
+		// Manejo de excepciones
+		if (error instanceof AxiosError) {
+			// Si es un error de Axios, obtenemos el mensaje desde la respuesta
+			const errorMessage = error.response?.data?.message || 'Error desconocido';
+
+			return NextResponse.json(
+				{
+					success: false,
+					message: errorMessage,
+				},
+				{ status: error.response?.status || 500 }
+			);
+		} else if (error instanceof Error) {
+			// Si es un error genérico de JavaScript, lo manejamos aquí
+			return NextResponse.json(
+				{
+					success: false,
+					message: error.message || 'Error desconocido',
+				},
+				{ status: 500 }
+			);
+		}
+
+		// En caso de que no sepamos qué tipo de error es
+		return NextResponse.json(
+			{
+				success: false,
+				message: 'Error desconocido',
+			},
+			{ status: 500 }
+		);
 	}
 }

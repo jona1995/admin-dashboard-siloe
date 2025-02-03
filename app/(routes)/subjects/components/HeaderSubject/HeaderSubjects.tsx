@@ -10,7 +10,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { FormCreateCustomer } from '../FormCreateCustomer';
+import { FormCreateSubject } from '../FormCreateSubject';
 
 export function HeaderSubjects() {
 	const [openModalCreate, setOpenModalCreate] = useState(false);
@@ -31,7 +31,7 @@ export function HeaderSubjects() {
 						</DialogDescription>
 					</DialogHeader>
 
-					<FormCreateCustomer setOpenModalCreate={setOpenModalCreate} />
+					<FormCreateSubject setOpenModalCreate={setOpenModalCreate} />
 				</DialogContent>
 			</Dialog>
 		</div>

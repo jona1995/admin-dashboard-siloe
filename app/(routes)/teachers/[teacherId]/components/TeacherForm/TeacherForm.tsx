@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Select from 'react-select'; // Importa react-select
@@ -55,7 +55,21 @@ export function TeacherForm(props: TeacherFormProps) {
 				console.log(response.data); // Log the response data
 				setSubjects(response.data);
 			} catch (error) {
-				console.error('Error fetching subjects:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -69,16 +83,39 @@ export function TeacherForm(props: TeacherFormProps) {
 					Number(subject)
 				), // Asegúrate de que todos los valores sean números
 			};
-			await axios.patch(`/api/teacher/${teacher.id}`, formattedValues);
-			toast({
-				title: 'Profesor actualizado!',
-			});
-			router.refresh();
+			const response = await axios.patch(
+				`/api/teacher/${teacher.id}`,
+				formattedValues
+			);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Profesor realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el profesor');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

@@ -14,41 +14,44 @@ import Link from 'next/link';
 import { StudentWithUser } from './modelos';
 export const columns: ColumnDef<StudentWithUser>[] = [
 	{
-		accessorKey: 'nombre',
+		accessorFn: row => row.user.nombre, // Accede al nombre dentro de 'user'
 		header: 'Nombres',
 	},
 	{
-		accessorKey: 'apellido',
+		accessorFn: row => row.user.apellido, // Accede al apellido dentro de 'user'
 		header: 'Apellidos',
 	},
 	{
-		accessorKey: 'cedula',
+		accessorFn: row => row.user.cedula, // Accede a la cédula dentro de 'user'
 		header: 'Cedula',
 	},
 	{
-		accessorKey: 'telefono',
+		accessorFn: row => row.user.telefono, // Accede al teléfono dentro de 'user'
 		header: 'Telefono',
 	},
 	{
-		accessorKey: 'email',
+		accessorFn: row => row.user.email, // Accede al email dentro de 'user'
 		header: 'Email',
 	},
 	{
-		accessorKey: 'iglesia',
+		accessorFn: row => row.user.iglesia, // Accede a la iglesia dentro de 'user'
 		header: 'Iglesia',
 	},
 	{
-		accessorKey: 'localidadIglesia',
+		accessorFn: row => row.user.localidadIglesia, // Accede a la localidadIglesia dentro de 'user'
 		header: 'Localidad Iglesia',
 	},
 	{
-		accessorKey: 'createdByName',
+		accessorFn: row => row.user.state, // Accede al estado dentro de 'user'
+		header: 'Estado',
+	},
+	{
+		accessorKey: 'createdByName', // Accede a 'createdByName' directamente
 		header: 'User Create',
 		cell: ({ row }) => row.original.createdByName,
 	},
-
 	{
-		accessorKey: 'updatedByName',
+		accessorKey: 'updatedByName', // Accede a 'updatedByName' directamente
 		header: 'User Update',
 		cell: ({ row }) => row.original.updatedByName,
 	},

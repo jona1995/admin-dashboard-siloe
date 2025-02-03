@@ -3,10 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
+import Select from 'react-select'; // Importa react-select
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/form';
 
 import { Input } from '@/components/ui/input';
-import { Toast } from '@/components/ui/toast';
 
 import { PlanFormProps } from './PlanForm.types';
 import { toast } from '@/components/ui/use-toast';
@@ -44,7 +43,7 @@ export function PlanForm(props: PlanFormProps) {
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			nombre: plan.nombre,
-			descripcion: plan.descripcion,
+			descripcion: plan.descripcion || undefined,
 			precioFinal: plan.precioFinal,
 			items: plan.items,
 		},
@@ -68,7 +67,21 @@ export function PlanForm(props: PlanFormProps) {
 				console.log(response.data); // Log the response data
 				setCourses(response.data);
 			} catch (error) {
-				console.error('Error fetching courses:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -106,16 +119,36 @@ export function PlanForm(props: PlanFormProps) {
 						  }
 						: undefined,
 			};
-			await axios.patch(`/api/plan/${plan.id}`, preparedData);
-			toast({
-				title: 'Plan actualizado!',
-			});
-			router.refresh();
+			const response = await axios.patch(`/api/plan/${plan.id}`, preparedData);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Plan realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el plan');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

@@ -10,19 +10,43 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { FormCreateCustomer } from '../FormCreateCustomer';
+import { FormCreateEnrolloment } from '../FormCreateEnrolloment';
 import { toast } from '@/components/ui/use-toast';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 export function HeaderEnrollment() {
 	const [openModalCreate, setOpenModalCreate] = useState(false);
 	const handleUpdateSaldo = async () => {
 		try {
 			const response = await axios.post('/api/enrollment/updateSaldoPendiente');
+
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Inscripcion realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el inscripcion');
+			}
 		} catch (error) {
-			toast({
-				title: 'Error al intentar actualizar los saldos pendientes.',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 	return (
@@ -41,7 +65,7 @@ export function HeaderEnrollment() {
 						</DialogDescription>
 					</DialogHeader>
 
-					<FormCreateCustomer setOpenModalCreate={setOpenModalCreate} />
+					<FormCreateEnrolloment setOpenModalCreate={setOpenModalCreate} />
 				</DialogContent>
 			</Dialog>
 		</div>

@@ -143,26 +143,26 @@ model Teacher {
 }
 
 model Enrollment {
-  id                    Int              @id @default(autoincrement())
-  estudianteId          Int
-  fechaInscripcionDesde DateTime
-  fechaInscripcionHasta DateTime?
-  estado                EstadoIncripcion //  Puede ser ACTIVO o INACTIVO
-  planId                Int?
-  modalidad             ModalidadEstudio // Modalidad de estudio del estudiante en el curso
-  plan                  Plan?            @relation(fields: [planId], references: [id]) // Relación con Plan
-  saldoPendiente        Float            @default(0) // Saldo negativo o positivo
-  student               Student          @relation(fields: [estudianteId], references: [id])
-  courses               Course[]         @relation("EnrollmentCourses") // Relación con múltiples cursos
-  payments              Payment[]        @relation("EnrollmentPayments") // Relación correcta con pagos
+  id                         Int              @id @default(autoincrement())
+  estudianteId               Int
+  fechaInscripcion           DateTime
+  fechaInscripcionCursoDesde DateTime
+  fechaInscripcionCursoHasta DateTime?
+  estado                     EstadoIncripcion //  Puede ser ACTIVO o INACTIVO
+  planId                     Int?
+  modalidad                  ModalidadEstudio // Modalidad de estudio del estudiante en el curso
+  plan                       Plan?            @relation(fields: [planId], references: [id]) // Relación con Plan
+  student                    Student          @relation(fields: [estudianteId], references: [id])
+  courses                    Course[]         @relation("EnrollmentCourses") // Relación con múltiples cursos
+  payments                   Payment[]        @relation("EnrollmentPayments") // Relación correcta con pagos
   // Relación muchos a muchos con estudiantes asociados
-  estudiantesAsociados  Student[]        @relation("StudentAssociates")
-  createdBy             String // Usuario autenticado
-  createdByName         String // Guarda el nombre en la base de datos
-  updatedBy             String?
-  updatedByName         String?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  estudiantesAsociados       Student[]        @relation("StudentAssociates")
+  createdBy                  String // Usuario autenticado
+  createdByName              String // Guarda el nombre en la base de datos
+  updatedBy                  String?
+  updatedByName              String?
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
 }
 
 model Payment {
@@ -316,6 +316,7 @@ enum TipoPago {
   MATRICULA
   GRADUACION
   CUOTA_MENSUAL
+  LIBROS
   OTRO
 }
 

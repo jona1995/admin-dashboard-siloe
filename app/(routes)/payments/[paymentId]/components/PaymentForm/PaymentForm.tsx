@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -80,7 +80,21 @@ export function PaymentForm(props: PaymentFormProps) {
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
 			} catch (error) {
-				console.error('Error fetching students:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -95,7 +109,21 @@ export function PaymentForm(props: PaymentFormProps) {
 				console.log(response.data); // Log the response data
 				setPlanes(response.data);
 			} catch (error) {
-				console.error('Error fetching planes:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -116,16 +144,40 @@ export function PaymentForm(props: PaymentFormProps) {
 					Number(beneficiario)
 				),
 			};
-			await axios.patch(`/api/payment/${payment.id}`, formattedValues);
-			toast({
-				title: 'Pago actualizado!',
-			});
-			router.refresh();
+			const response = await axios.patch(
+				`/api/payment/${payment.id}`,
+				formattedValues
+			);
+
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Pago realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el pago');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

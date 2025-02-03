@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
-import { FormCreateCustomer } from '../FormCreateCustomer';
+import { FormCreatePlan } from '../FormCreatePlan';
 
 export function HeaderPlans() {
 	const [openModalCreate, setOpenModalCreate] = useState(false);
@@ -32,7 +32,7 @@ export function HeaderPlans() {
 						</DialogDescription>
 					</DialogHeader>
 
-					<FormCreateCustomer setOpenModalCreate={setOpenModalCreate} />
+					<FormCreatePlan setOpenModalCreate={setOpenModalCreate} />
 				</DialogContent>
 			</Dialog>
 		</div>

@@ -203,23 +203,47 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</div>
-			<div className="flex items-center justify-end py-4 space-x-2">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => table.previousPage()}
-					disabled={!table.getCanPreviousPage()}
-				>
-					Previous
-				</Button>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => table.nextPage()}
-					disabled={!table.getCanNextPage()}
-				>
-					Next
-				</Button>
+			{/* Controles de paginación */}
+			<div className="flex items-center justify-between py-4">
+				{/* Selector de filas por página */}
+				<div className="flex items-center space-x-2">
+					<span>Rows per page:</span>
+					<select
+						value={table.getState().pagination.pageSize}
+						onChange={e => table.setPageSize(Number(e.target.value))}
+						className="border rounded p-2"
+					>
+						{[5, 10, 20, 30, 40, 50, 100].map(pageSize => (
+							<option key={pageSize} value={pageSize}>
+								{pageSize}
+							</option>
+						))}
+					</select>
+				</div>
+
+				{/* Controles de navegación */}
+				<div className="flex items-center space-x-2">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => table.previousPage()}
+						disabled={!table.getCanPreviousPage()}
+					>
+						Previous
+					</Button>
+					<span>
+						Page {table.getState().pagination.pageIndex + 1} of{' '}
+						{table.getPageCount()}
+					</span>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => table.nextPage()}
+						disabled={!table.getCanNextPage()}
+					>
+						Next
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

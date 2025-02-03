@@ -46,7 +46,17 @@ export const columns: ColumnDef<Course>[] = [
 		accessorKey: 'subjectsNames',
 		header: 'Materias',
 	},
+	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
 
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
+	},
 	{
 		id: 'actions',
 		header: 'Actions',

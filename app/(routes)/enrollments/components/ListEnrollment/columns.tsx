@@ -17,14 +17,14 @@ import { Enrollment } from '../../utils/type_model';
 
 export const columns: ColumnDef<Enrollment>[] = [
 	{
-		accessorKey: 'fechaInscripcionDesde',
-		header: 'Fecha Inscripcion Desde',
+		accessorKey: 'fechaInscripcion',
+		header: 'Fecha Inscripcion',
 		cell: ({ row }) =>
-			moment(row.getValue('fechaInscripcionDesde')).format('DD/MM/YYYY'),
+			moment(row.getValue('fechaInscripcion')).format('DD/MM/YYYY'),
 		filterFn: (row, columnId, filterValue) => {
 			if (!filterValue) return true; // Si no hay filtro, muestra todas las filas.
 
-			const rowDate = moment(row.original.fechaInscripcionDesde, 'YYYY-MM-DD');
+			const rowDate = moment(row.original.fechaInscripcion, 'YYYY-MM-DD');
 			const fromDate = moment(filterValue, 'DD/MM/YYYY'); // Convierte el filtro ingresado por el usuario.
 
 			// Verifica si la fecha de la fila es igual o posterior a la fecha del filtro.
@@ -36,16 +36,43 @@ export const columns: ColumnDef<Enrollment>[] = [
 		},
 	},
 	{
-		accessorKey: 'fechaInscripcionHasta',
+		accessorKey: 'fechaInscripcionCursoDesde',
+		header: 'Fecha Inscripcion Desde',
+		cell: ({ row }) =>
+			moment(row.getValue('fechaInscripcionCursoDesde')).format('DD/MM/YYYY'),
+		filterFn: (row, columnId, filterValue) => {
+			if (!filterValue) return true; // Si no hay filtro, muestra todas las filas.
+
+			const rowDate = moment(
+				row.original.fechaInscripcionCursoDesde,
+				'YYYY-MM-DD'
+			);
+			const fromDate = moment(filterValue, 'DD/MM/YYYY'); // Convierte el filtro ingresado por el usuario.
+
+			// Verifica si la fecha de la fila es igual o posterior a la fecha del filtro.
+			return (
+				rowDate.isValid() &&
+				fromDate.isValid() &&
+				rowDate.isSameOrAfter(fromDate, 'day')
+			);
+		},
+	},
+	{
+		accessorKey: 'fechaInscripcionCursoHasta',
 		header: 'Fecha Inscripcion Hasta',
 		cell: ({ row }) =>
-			row.getValue('fechaInscripcionHasta')
-				? moment(row.getValue('fechaInscripcionHasta')).format('DD/MM/YYYY')
+			row.getValue('fechaInscripcionCursoHasta')
+				? moment(row.getValue('fechaInscripcionCursoHasta')).format(
+						'DD/MM/YYYY'
+				  )
 				: '',
 		filterFn: (row, columnId, filterValue) => {
 			if (!filterValue) return true; // Si no hay filtro, muestra todas las filas.
 
-			const rowDate = moment(row.original.fechaInscripcionHasta, 'YYYY-MM-DD');
+			const rowDate = moment(
+				row.original.fechaInscripcionCursoHasta,
+				'YYYY-MM-DD'
+			);
 			const fromDate = moment(filterValue, 'DD/MM/YYYY'); // Convierte el filtro ingresado por el usuario.
 
 			// Verifica si la fecha de la fila es igual o posterior a la fecha del filtro.
@@ -83,7 +110,7 @@ export const columns: ColumnDef<Enrollment>[] = [
 				<span
 					className={`px-2 py-1 rounded text-white ${
 						estado === 'ACTIVO'
-							? 'bg-gray-500'
+							? 'bg-yellow-500'
 							: estado === 'INACTIVO'
 							? 'bg-red-500'
 							: 'bg-green-500'
@@ -111,9 +138,9 @@ export const columns: ColumnDef<Enrollment>[] = [
 				<span
 					className={`px-2 py-1 rounded text-white ${
 						estado === 'EN_CLASE'
-							? 'bg-slate-600'
+							? 'bg-teal-600'
 							: estado === 'GRABADO'
-							? 'bg-yellow-500'
+							? 'bg-blue-800'
 							: 'bg-gray-500'
 					}`}
 				>
@@ -121,6 +148,17 @@ export const columns: ColumnDef<Enrollment>[] = [
 				</span>
 			);
 		},
+	},
+	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
+
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
 	},
 	{
 		id: 'actions',

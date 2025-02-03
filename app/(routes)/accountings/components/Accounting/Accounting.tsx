@@ -8,6 +8,8 @@ import {
 	formatCurrency,
 	Income,
 } from './Accounting.type';
+import { AxiosError } from 'axios';
+import { toast } from '@/components/ui/use-toast';
 
 const AccountingPage: NextPage = () => {
 	const [income, setIncome] = useState<Income[]>([]);
@@ -24,7 +26,21 @@ const AccountingPage: NextPage = () => {
 				setExpenses(data.expenses);
 				setBalance(data.balance);
 			} catch (error) {
-				console.error('Error fetching accounting data:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			} finally {
 				setLoading(false);
 			}

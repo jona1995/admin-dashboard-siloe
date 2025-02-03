@@ -20,7 +20,11 @@ export async function Evaluations() {
 		},
 		include: {
 			subject: true, // Incluye la información de la materia
-			student: true, // Incluye la información del estudiante
+			student: {
+				include: {
+					user: true, // Incluye la información del usuario asociado con el estudiante
+				},
+			},
 		},
 	});
 

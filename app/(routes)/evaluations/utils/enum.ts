@@ -1,4 +1,5 @@
 import { Student, Subject, TipoEvaluacion } from '@prisma/client';
+import { StudentWithUser } from '../../students/components/ListStudents/modelos';
 
 export enum Tipo {
 	CALIFICACION_FINAL = 'CALIFICACION_FINAL',
@@ -34,6 +35,11 @@ export type Evaluation = {
 	nota: number;
 	comentario: string;
 	createdAt: Date;
-	student: Student; // Este es el objeto relacionado del estudiante
+	student: StudentWithUser; // Este es el objeto relacionado del estudiante
 	subject: Subject; // Este es el objeto relacionado de la materia
+	updatedAt: Date;
+	createdBy: string;
+	createdByName: string;
+	updatedBy: string | null;
+	updatedByName: string | null;
 };

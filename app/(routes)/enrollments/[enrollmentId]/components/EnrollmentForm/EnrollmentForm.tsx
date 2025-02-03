@@ -3,11 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Select from 'react-select'; // Importa react-select
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
 	Form,
@@ -17,21 +16,13 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import {
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Toast } from '@/components/ui/toast';
-
 import { EnrollmentFormProps } from './EnrollmentForm.types';
 import { formSchema } from './EnrollmentForm.form';
 import { toast } from '@/components/ui/use-toast';
 import { Course, Plan, Student } from '@prisma/client';
 import { EstadoIncripcion, ModalidadEstudio } from '../../../utils/type';
 import moment from 'moment';
+import { StudentWithUser } from '@/app/(routes)/students/components/ListStudents/modelos';
 
 export function EnrollmentForm(props: EnrollmentFormProps) {
 	const { enrollment } = props;
@@ -42,26 +33,42 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 		defaultValues: {
 			estudianteId: enrollment.estudianteId.toString(),
 			courses: enrollment.courses.map(course => course.id.toString()),
-			fechaInscripcionDesde: enrollment.fechaInscripcionDesde,
-			fechaInscripcionHasta: enrollment.fechaInscripcionHasta,
+			fechaInscripcionCursoDesde: enrollment.fechaInscripcionCursoDesde,
+			fechaInscripcionCursoHasta:
+				enrollment.fechaInscripcionCursoHasta || undefined,
 			estado: enrollment.estado,
 			planId: enrollment.planId ? enrollment.planId.toString() : undefined,
 			modalidad: enrollment.modalidad,
-			estudiantesAsociados: enrollment.estudiantesAsociados.map(
-				estudianteAsociado => beneficiario.id.toString()
-			),
+			estudiantesAsociados: [],
+			// enrollment.estudiantesAsociados.map(
+			// 	estudianteAsociado => beneficiario.id.toString()
+			// ),
 		},
 	});
-	const [students, setStudents] = useState<Student[]>([]); // Estado para
+	const [students, setStudents] = useState<StudentWithUser[]>([]); // Estado para
 	useEffect(() => {
 		const fetchStudents = async () => {
 			try {
-				const response = await axios.get<Student[]>('/api/student');
+				const response = await axios.get<StudentWithUser[]>('/api/student');
 
 				console.log(response.data); // Log the response data
 				setStudents(response.data);
 			} catch (error) {
-				console.error('Error fetching students:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -85,7 +92,21 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 				console.log(response.data); // Log the response data
 				setCourses(response.data);
 			} catch (error) {
-				console.error('Error fetching courses:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -113,7 +134,21 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 				console.log(response.data); // Log the response data
 				setPlanes(response.data);
 			} catch (error) {
-				console.error('Error fetching planes:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -132,16 +167,39 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 				courses: values.courses.map(course => Number(course)),
 			};
 			console.log(enrollment);
-			await axios.patch(`/api/enrollment/${enrollment.id}`, formattedValues);
-			toast({
-				title: 'Incripcion actualizada!',
-			});
-			router.refresh();
+			const response = await axios.patch(
+				`/api/enrollment/${enrollment.id}`,
+				formattedValues
+			);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Inscripcion realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el inscripcion');
+			}
 		} catch (error) {
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 
@@ -151,7 +209,7 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 				<div className="grid grid-cols-2 gap-3">
 					<FormField
 						control={form.control}
-						name="fechaInscripcionDesde"
+						name="fechaInscripcionCursoDesde"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Fecha Incripcion Desde</FormLabel>
@@ -180,7 +238,7 @@ export function EnrollmentForm(props: EnrollmentFormProps) {
 					/>
 					<FormField
 						control={form.control}
-						name="fechaInscripcionHasta"
+						name="fechaInscripcionCursoHasta"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Fecha Incripcion hasta</FormLabel>

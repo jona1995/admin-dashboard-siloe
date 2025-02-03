@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs';
 import { EstadoPago, Saldo, TipoPago } from '@prisma/client';
 import { AxiosError } from 'axios';
+import moment from 'moment';
 import { NextResponse } from 'next/server';
 
 const obtenerUltimoPago = async (enrollmentId: number) => {
@@ -18,22 +19,28 @@ const obtenerMontoPorInscripcion = (enrollment: any) => {
 
 	// Si el estudiante tiene un plan
 	if (enrollment.plan) {
-		for (const cursoInscripcion of enrollment.courses) {
-			// Buscar el curso en el plan
-			const planItem = enrollment.plan.items.find(
-				(item: any) => item.curso.id === cursoInscripcion.id
-			);
+		if (enrollment.courses.length > 0) {
+			// Si hay un plan y cursos, calcular el monto basado en los cursos dentro del plan
+			for (const cursoInscripcion of enrollment.courses) {
+				// Buscar el curso en el plan
+				const planItem = enrollment.plan.items.find(
+					(item: any) => item.curso.id === cursoInscripcion.id
+				);
 
-			if (planItem) {
-				const cursoPrecio = planItem.curso.precio;
-				const descuento = planItem.descuento || 0;
-				const precioConDescuento =
-					cursoPrecio - cursoPrecio * (descuento / 100);
-				montoTotal += precioConDescuento * planItem.cantidad;
+				if (planItem) {
+					const cursoPrecio = planItem.curso.precio;
+					const descuento = planItem.descuento || 0;
+					const precioConDescuento =
+						cursoPrecio - cursoPrecio * (descuento / 100);
+					montoTotal += precioConDescuento * planItem.cantidad;
+				}
 			}
+		} else {
+			// Si hay un plan pero no cursos, usar el precio total del plan
+			montoTotal = enrollment.plan.precio || 0;
 		}
 	} else {
-		// Si no tiene plan, calcular el monto sumando los precios de los cursos inscritos
+		// Si no hay plan, calcular el monto sumando los precios de los cursos inscritos
 		montoTotal = enrollment.courses.reduce(
 			(acc: number, curso: { precio: number }) => acc + curso.precio,
 			0
@@ -54,43 +61,47 @@ const procesarPagoInscripcion = async (
 		throw new Error('Inscripción no encontrada');
 	}
 
-	const fechaInscripcionDesde = new Date(enrollment.fechaInscripcionDesde);
-	const fechaInscripcionHasta = enrollment.fechaInscripcionHasta
-		? new Date(enrollment.fechaInscripcionHasta)
+	// Convertir fechas a objetos Moment con formato DD/MM/YYYY
+	const fechaInscripcionCursoDesde = moment(
+		enrollment.fechaInscripcionCursoDesde
+	);
+	const fechaInscripcionCursoHasta = enrollment.fechaInscripcionCursoHasta
+		? moment(enrollment.fechaInscripcionCursoHasta)
 		: null;
 
-	const fechaPagoMesDate = new Date(fechaPagoMes);
+	const fechaPagoMesDate = moment(fechaPagoMes, 'DD/MM/YYYY', true);
 
-	if (isNaN(fechaPagoMesDate.getTime())) {
+	if (!fechaPagoMesDate.isValid()) {
 		throw new Error('La fecha de pago proporcionada no es válida.');
 	}
 
 	// Validar si la fecha de pago está dentro del rango de inscripción
-	if (fechaPagoMesDate < fechaInscripcionDesde) {
+	if (fechaPagoMesDate.isBefore(fechaInscripcionCursoDesde, 'day')) {
 		throw new Error(
 			'La fecha de pago no puede ser anterior a la fecha de inscripción.'
 		);
 	}
 
-	if (fechaInscripcionHasta && fechaPagoMesDate > fechaInscripcionHasta) {
+	if (
+		fechaInscripcionCursoHasta &&
+		fechaPagoMesDate.isAfter(fechaInscripcionCursoHasta, 'day')
+	) {
 		throw new Error(
 			'La fecha de pago no puede ser posterior a la fecha límite de inscripción.'
 		);
 	}
 
 	// Paso 2: Verificar si ya existe un pago para este mes y concepto
-	const fechaInicioMes = new Date(fechaPagoMesDate);
-	fechaInicioMes.setDate(1); // Primer día del mes
-	const fechaFinMes = new Date(fechaInicioMes);
-	fechaFinMes.setMonth(fechaInicioMes.getMonth() + 1); // Primer día del mes siguiente
+	const fechaInicioMes = moment(fechaPagoMes, 'DD/MM/YYYY').startOf('month');
+	const fechaFinMes = moment(fechaInicioMes).add(1, 'month');
 
 	const pagoExistente = await db.payment.findFirst({
 		where: {
 			enrollmentId: enrollment.id,
 			tipoPago: concepto,
 			fechaPagoMes: {
-				gte: fechaInicioMes,
-				lt: fechaFinMes,
+				gte: fechaInicioMes.toDate(),
+				lt: fechaFinMes.toDate(),
 			},
 		},
 	});
@@ -105,42 +116,58 @@ const procesarPagoInscripcion = async (
 
 	// Si no hay pagos previos, no se puede validar la secuencia de meses, pero si hay, validamos la consecutividad
 	if (ultimoPago) {
-		const ultimaFechaPago = new Date(ultimoPago.fechaPagoMes);
+		// const ultimaFechaPago = new Date(ultimoPago.fechaPagoMes);
 
-		// Verificar si el mes del último pago es el mes anterior al mes del nuevo pago
-		const mesUltimoPago = ultimaFechaPago.getMonth();
-		const anioUltimoPago = ultimaFechaPago.getFullYear();
+		// // Verificar si el mes del último pago es el mes anterior al mes del nuevo pago
+		// const mesUltimoPago = ultimaFechaPago.getMonth();
+		// const anioUltimoPago = ultimaFechaPago.getFullYear();
 
-		const mesNuevoPago = fechaPagoMesDate.getMonth();
-		const anioNuevoPago = fechaPagoMesDate.getFullYear();
+		// const mesNuevoPago = fechaPagoMesDate.getMonth();
+		// const anioNuevoPago = fechaPagoMesDate.getFullYear();
 
-		// Si el mes del pago nuevo no es el mes siguiente, lanzar error
-		if (
-			mesNuevoPago !== mesUltimoPago + 1 && // Compara el mes, es decir, mes del último pago + 1
-			!(
-				mesUltimoPago === 11 &&
-				mesNuevoPago === 0 &&
-				anioNuevoPago === anioUltimoPago + 1
-			) // Si diciembre a enero
-		) {
+		// // Si el mes del pago nuevo no es el mes siguiente, lanzar error
+		// if (
+		// 	mesNuevoPago !== mesUltimoPago + 1 && // Compara el mes, es decir, mes del último pago + 1
+		// 	!(
+		// 		mesUltimoPago === 11 &&
+		// 		mesNuevoPago === 0 &&
+		// 		anioNuevoPago === anioUltimoPago + 1
+		// 	) // Si diciembre a enero
+		// ) {
+		// 	throw new Error(
+		// 		'Tiene pagos pendientes, El pago debe ser para el mes siguiente al último pago.'
+		// 	);
+		// }
+		const ultimaFechaPago = moment(ultimoPago.fechaPagoMes);
+
+		// Verificar si el nuevo pago es para el mes siguiente
+		const diferenciaMeses = moment(fechaPagoMes, 'DD/MM/YYYY').diff(
+			ultimaFechaPago,
+			'months'
+		);
+
+		if (diferenciaMeses !== 1) {
 			throw new Error(
-				'Tiene pagos pendientes, El pago debe ser para el mes siguiente al último pago.'
+				'Tiene pagos pendientes, el pago debe ser para el mes siguiente al último pago.'
 			);
 		}
 	}
 
-	const saldoAnterior = ultimoPago
-		? ultimoPago.saldoPosterior
-		: enrollment.saldoPendiente ?? 0; // Si no hay pagos, tomar saldo pendiente
+	// const saldoAnterior = ultimoPago
+	// 	? ultimoPago.saldoPosterior
+	// 	: enrollment.saldoPendiente ?? 0; // Si no hay pagos, tomar saldo pendiente
+
+	const saldoAnterior = ultimoPago ? ultimoPago.saldoPosterior : 0; // Si no hay pagos, tomar saldo pendiente
 
 	// Paso 4: Calcular el monto mensual y el saldo pendiente
 	const montoMensual = obtenerMontoPorInscripcion(enrollment); // Función para obtener el costo mensual
 
 	// Validar si el pago corresponde al mes de inscripción
-	const mesInscripcion =
-		fechaInscripcionDesde.getFullYear() * 12 + fechaInscripcionDesde.getMonth();
-	const mesPago =
-		fechaPagoMesDate.getFullYear() * 12 + fechaPagoMesDate.getMonth();
+	const mesInscripcion = moment(
+		fechaInscripcionCursoDesde,
+		'DD/MM/YYYY'
+	).format('YYYYMM');
+	const mesPago = moment(fechaPagoMes, 'DD/MM/YYYY').format('YYYYMM');
 
 	const esMesDeInscripcion = mesInscripcion === mesPago;
 
@@ -152,10 +179,7 @@ const procesarPagoInscripcion = async (
 		? montoMensual - saldoAnterior
 		: montoMensual +
 		  (saldoAnterior < 0 ? Math.abs(saldoAnterior) : -saldoAnterior);
-	var a =
-		montoMensual +
-		(saldoAnterior < 0 ? Math.abs(saldoAnterior) : -saldoAnterior);
-	console.log('a', a);
+
 	console.log('hahaha');
 	console.log(enrollment);
 
@@ -184,14 +208,6 @@ const procesarPagoInscripcion = async (
 		estadoPago = EstadoPago.COMPLETADO;
 		saldo = Saldo.SALDO_A_FAVOR;
 	}
-
-	// Paso 6: Actualizar el saldo pendiente
-	await db.enrollment.update({
-		where: { id: enrollment.id },
-		data: {
-			saldoPendiente: saldoPosterior < 0 ? Math.abs(saldoPosterior) : 0,
-		},
-	});
 
 	return {
 		montoMensual,

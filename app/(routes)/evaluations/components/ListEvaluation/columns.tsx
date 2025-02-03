@@ -41,11 +41,11 @@ export const columns: ColumnDef<Evaluation>[] = [
 	{
 		accessorKey: 'estudianteId',
 		header: 'Estudiante',
-		cell: ({ row }) => row.original.student.nombre,
+		cell: ({ row }) => row.original.student.user.nombre,
 		// Filtro personalizado para buscar por el nombre del estudiante
 		filterFn: (row, columnId, value) => {
 			// Si el nombre del estudiante contiene el valor de búsqueda (insensible a mayúsculas/minúsculas)
-			return row.original.student.nombre
+			return row.original.student.user.nombre
 				.toLowerCase()
 				.includes(value.toLowerCase());
 		},
@@ -123,6 +123,17 @@ export const columns: ColumnDef<Evaluation>[] = [
 	{
 		accessorKey: 'comentario',
 		header: 'Comentario',
+	},
+	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
+
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
 	},
 	{
 		id: 'actions',

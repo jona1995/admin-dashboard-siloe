@@ -1,12 +1,14 @@
 import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs';
+import { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
 	try {
-		const { userId, user } = auth();
+		const { userId } = auth();
 		const data = await req.json();
-
+		const userName = req.headers.get('x-user-name');
+		const userEmail = req.headers.get('x-user-email');
 		if (!userId) {
 			return new NextResponse('Unauthorized', { status: 401 });
 		}
@@ -15,19 +17,52 @@ export async function POST(req: Request) {
 			data: {
 				...data,
 				createdBy: userId,
-				createdByName: user?.firstName
-					? user?.firstName + ' ' + user.lastName
-					: '',
+				createdByName: userName ? userName : '',
 				subjects: {
 					connect: data.subjects.map((id: number) => ({ id })), // Conecta las materias por ID
 				},
 			},
 		});
 
-		return NextResponse.json(teacher);
+		// Si todo va bien, devolver una respuesta exitosa
+		return NextResponse.json({
+			success: true,
+			message: 'Profesor procesado exitosamente',
+			data: teacher,
+			status: 200,
+		});
 	} catch (error) {
-		console.log('[TEACHER]', error);
-		return new NextResponse('Internal Error', { status: 500 });
+		// Manejo de excepciones
+		if (error instanceof AxiosError) {
+			// Si es un error de Axios, obtenemos el mensaje desde la respuesta
+			const errorMessage = error.response?.data?.message || 'Error desconocido';
+
+			return NextResponse.json(
+				{
+					success: false,
+					message: errorMessage,
+				},
+				{ status: error.response?.status || 500 }
+			);
+		} else if (error instanceof Error) {
+			// Si es un error genérico de JavaScript, lo manejamos aquí
+			return NextResponse.json(
+				{
+					success: false,
+					message: error.message || 'Error desconocido',
+				},
+				{ status: 500 }
+			);
+		}
+
+		// En caso de que no sepamos qué tipo de error es
+		return NextResponse.json(
+			{
+				success: false,
+				message: 'Error desconocido',
+			},
+			{ status: 500 }
+		);
 	}
 }
 
@@ -46,9 +81,44 @@ export async function GET(req: Request) {
 			},
 		});
 
-		return NextResponse.json(teachers);
+		// Si todo va bien, devolver una respuesta exitosa
+		return NextResponse.json({
+			success: true,
+			message: 'Profesor procesado exitosamente',
+			data: teachers,
+			status: 200,
+		});
 	} catch (error) {
-		console.log('[teachers]', error);
-		return new NextResponse('Internal Error', { status: 500 });
+		// Manejo de excepciones
+		if (error instanceof AxiosError) {
+			// Si es un error de Axios, obtenemos el mensaje desde la respuesta
+			const errorMessage = error.response?.data?.message || 'Error desconocido';
+
+			return NextResponse.json(
+				{
+					success: false,
+					message: errorMessage,
+				},
+				{ status: error.response?.status || 500 }
+			);
+		} else if (error instanceof Error) {
+			// Si es un error genérico de JavaScript, lo manejamos aquí
+			return NextResponse.json(
+				{
+					success: false,
+					message: error.message || 'Error desconocido',
+				},
+				{ status: 500 }
+			);
+		}
+
+		// En caso de que no sepamos qué tipo de error es
+		return NextResponse.json(
+			{
+				success: false,
+				message: 'Error desconocido',
+			},
+			{ status: 500 }
+		);
 	}
 }

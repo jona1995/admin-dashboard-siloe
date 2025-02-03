@@ -35,6 +35,25 @@ export const columns: ColumnDef<Payment_model>[] = [
 		},
 	},
 	{
+		accessorKey: 'fechaPagoRecibo',
+		header: 'Fecha Pago Recibo',
+		cell: ({ row }) =>
+			moment(row.getValue('fechaPagoRecibo')).format('DD/MM/YYYY'),
+		filterFn: (row, columnId, filterValue) => {
+			if (!filterValue) return true; // Si no hay filtro, muestra todas las filas.
+
+			const rowDate = moment(row.original.fechaPagoRecibo, 'YYYY-MM-DD');
+			const fromDate = moment(filterValue, 'DD/MM/YYYY'); // Convierte el filtro ingresado por el usuario.
+
+			// Verifica si la fecha de la fila es igual o posterior a la fecha del filtro.
+			return (
+				rowDate.isValid() &&
+				fromDate.isValid() &&
+				rowDate.isSameOrAfter(fromDate, 'day')
+			);
+		},
+	},
+	{
 		accessorKey: 'monto',
 		header: 'Monto',
 		cell: ({ row }) => {
@@ -126,6 +145,17 @@ export const columns: ColumnDef<Payment_model>[] = [
 	{
 		accessorKey: 'comentario',
 		header: 'Comentario',
+	},
+	{
+		accessorKey: 'createdByName',
+		header: 'User Create',
+		cell: ({ row }) => row.original.createdByName,
+	},
+
+	{
+		accessorKey: 'updatedByName',
+		header: 'User Update',
+		cell: ({ row }) => row.original.updatedByName,
 	},
 	{
 		id: 'actions',

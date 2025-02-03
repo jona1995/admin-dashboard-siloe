@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 async function calcularSaldoPendientePorInscripcion(
 	enrollment: any
 ): Promise<number> {
-	const { fechaInscripcionDesde, planId, courses } = enrollment;
+	const { fechaInscripcionCursoDesde, planId, courses } = enrollment;
 
 	const now = new Date();
 	const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -15,7 +15,7 @@ async function calcularSaldoPendientePorInscripcion(
 	// Calcular meses desde la inscripción hasta el mes actual
 	const monthsSinceEnrollment = Math.ceil(
 		(startOfCurrentMonth.getTime() -
-			new Date(fechaInscripcionDesde).getTime()) /
+			new Date(fechaInscripcionCursoDesde).getTime()) /
 			(1000 * 60 * 60 * 24 * 30)
 	);
 
@@ -60,7 +60,7 @@ async function calcularSaldoPendientePorInscripcion(
 
 		// Calcular saldo pendiente mes a mes
 		for (let i = 0; i < monthsSinceEnrollment; i++) {
-			const targetMonth = new Date(fechaInscripcionDesde);
+			const targetMonth = new Date(fechaInscripcionCursoDesde);
 			targetMonth.setMonth(targetMonth.getMonth() + i);
 
 			const monthKey = `${targetMonth.getFullYear()}-${
@@ -84,7 +84,7 @@ async function calcularSaldoPendientePorInscripcion(
 
 		// Calcular saldo pendiente mes a mes
 		for (let i = 0; i < monthsSinceEnrollment; i++) {
-			const targetMonth = new Date(fechaInscripcionDesde);
+			const targetMonth = new Date(fechaInscripcionCursoDesde);
 			targetMonth.setMonth(targetMonth.getMonth() + i);
 
 			const monthKey = `${targetMonth.getFullYear()}-${
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
 				enrollments: {
 					some: {
 						estado: 'ACTIVO', // Inscripción activa
-						fechaInscripcionDesde: {
+						fechaInscripcionCursoDesde: {
 							lte: today, // Inscripción antes o en la fecha actual
 						},
 						payments: {

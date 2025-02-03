@@ -3,11 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Select from 'react-select'; // Importa react-select
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
 	Form,
@@ -35,7 +34,7 @@ export function CourseForm(props: CourseFormProps) {
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			nombre: course.nombre,
-			descripcion: course.descripcion,
+			descripcion: course.descripcion || undefined,
 			duracion: Number(course.duracion),
 			precio: Number(course.duracion),
 			subjects: course.subjects.map(subject => subject.id.toString()),
@@ -54,7 +53,21 @@ export function CourseForm(props: CourseFormProps) {
 				console.log(response.data); // Log the response data
 				setSubjects(response.data);
 			} catch (error) {
-				console.error('Error fetching subjects:', error);
+				// Asegurarse de que `error` es un AxiosError
+				if (error instanceof AxiosError) {
+					const errorMessage =
+						error.response?.data?.message || 'Algo salió mal';
+
+					toast({
+						title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+						variant: 'destructive',
+					});
+				} else {
+					toast({
+						title: 'Something went wrong',
+						variant: 'destructive',
+					});
+				}
 			}
 		};
 
@@ -68,17 +81,39 @@ export function CourseForm(props: CourseFormProps) {
 					Number(subject)
 				), // Asegúrate de que todos los valores sean números
 			};
-			await axios.patch(`/api/course/${course.id}`, formattedValues);
-			toast({
-				title: 'Curso actualizado!',
-			});
-			router.refresh();
+			const response = await axios.patch(
+				`/api/course/${course.id}`,
+				formattedValues
+			);
+			if (response.status === 200) {
+				// Aquí obtienes el mensaje de éxito de la API y lo muestras con el toast
+				const successMessage =
+					response.data.message || 'Curso realizado con éxito';
+
+				toast({
+					title: successMessage,
+				});
+
+				router.refresh(); // Refrescar la página para obtener los datos actualizados
+			} else {
+				// Si no es un 200, puedes manejarlo aquí como un error
+				throw new Error('Hubo un problema con el curso');
+			}
 		} catch (error) {
-			console.log('Error al crear el curso:', error);
-			toast({
-				title: 'Something went wrong',
-				variant: 'destructive',
-			});
+			// Asegurarse de que `error` es un AxiosError
+			if (error instanceof AxiosError) {
+				const errorMessage = error.response?.data?.message || 'Algo salió mal';
+
+				toast({
+					title: errorMessage, // Mostrar el mensaje de error recibido desde la API
+					variant: 'destructive',
+				});
+			} else {
+				toast({
+					title: 'Something went wrong',
+					variant: 'destructive',
+				});
+			}
 		}
 	};
 

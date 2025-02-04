@@ -3,6 +3,3 @@
   publish = ".next"
   environment = { NODE_ENV = "production", NEXT_PRIVATE_TARGET = "server" }
   clear_cache = true
-
-[build.environment]
-  NODE_VERSION = "18"

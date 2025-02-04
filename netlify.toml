@@ -1,5 +1,0 @@
-[build]
-  command = "yarn build"
-  publish = ".next"
-  environment = { NODE_ENV = "production", NEXT_PRIVATE_TARGET = "server" }
-  clear_cache = true

@@ -1,6 +1,4 @@
 /** @type {import('next').NextConfig} */
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
-
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -11,7 +9,6 @@ const nextConfig = {
       },
     ],
   },
-
 };
 
 export default nextConfig;

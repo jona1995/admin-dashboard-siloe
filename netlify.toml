@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
-  environment = { NODE_ENV = "production" }
   publish = "public"
-  clear_cache = true
+
 [build.environment]
   NODE_VERSION = "18"
+  NODE_ENV = "production"
